@@ -58,6 +58,7 @@ $ ./liveW -h
      - fragCoord -> gl_FragCoord
      - fragColor -> color
      - iTime -> time
+     - void mainImage( in, out ) -> void main()
   5. If using music input replace code:
      - texture(iChannel0, vec2(coordX, coordY)).x;
      - If coordY is smaller then 0.5 replace with:
