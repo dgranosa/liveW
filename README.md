@@ -41,4 +41,26 @@ $ ./liveW -h
         Specify using the name from "pacmd list-sources | grep "name:""
 ```
 # Using shaders from Shadertoy
-  TODO
+**NOTE: liveW have only support for music input for now**
+  1. Create directory inside Shaders/ and copy shader code in file frag.glsl inside created folder.
+  2. Add to begining of the shader:
+   ```
+   #version 430
+   uniform vec2 resolution;
+   uniform float time;
+   uniform sampler1D samples;
+   uniform sampler1D fft;
+   out vec4 color;
+   ```
+  3. Rename possible colission between variables names from above inside code in something else.
+  4. Replace:
+     - iResolution -> resolution
+     - fragCoord -> gl_FragCoord
+     - fragColor -> color
+     - iTime -> time
+  5. If using music input replace code:
+     - texture(iChannel0, vec2(coordX, coordY)).x;
+     - If coordY is smaller then 0.5 replace with:
+       - texture(fft, coordX).x;
+     - otherwise
+       - texture(samples, coordX).x;
