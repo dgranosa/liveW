@@ -6,6 +6,7 @@
 #include <stdlib.h>
 
 #include <X11/Xatom.h>
+#include <X11/extensions/Xrender.h>
 
 #include "opengl.h"
 #include "config.h"
@@ -18,8 +19,9 @@ typedef struct xwin {
 	GLint screenNum;
 
 	XSetWindowAttributes swa;
-	GLXFBConfig *fbc;
+	GLXFBConfig fbc, *fbcs;
 	XVisualInfo *vi;
+	XRenderPictFormat *pict;
 	Colormap cmap;
 
 	GLint width, height;

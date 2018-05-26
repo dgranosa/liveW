@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
     ctx->dev = cfg.src;
     ctx->frame_avg = 2;
     ctx->start_low = 1;
-    ctx->win_type = WINDOW_HAMMING;
+    ctx->win_type = WINDOW_HANNING;
     ctx->fft_flags = FFTW_PATIENT | FFTW_DESTROY_INPUT;
 
     init_pulse(ctx);

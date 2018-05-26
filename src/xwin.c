@@ -17,22 +17,26 @@ xwin *init_xwin()
     else
         initBackground(win);
 
-    uint32_t cardinal_alpha = (uint32_t) (cfg.transparency * (uint32_t)-1) ;
-    XChangeProperty(win->display, win->window,
-                    XInternAtom(win->display, "_NET_WM_WINDOW_OPACITY", 0),
-                    XA_CARDINAL, 32, PropModeReplace, (uint8_t*) &cardinal_alpha,1);
-
+    if (cfg.transparency < 1.0) {
+        uint32_t cardinal_alpha = (uint32_t) (cfg.transparency * (uint32_t)-1) ;
+        XChangeProperty(win->display, win->window,
+                        XInternAtom(win->display, "_NET_WM_WINDOW_OPACITY", 0),
+                        XA_CARDINAL, 32, PropModeReplace, (uint8_t*) &cardinal_alpha,1);
+    }
     return win;
 }
 
 void initWindow(xwin *win)
 {
 	int attr[] = {
-		GLX_RGBA,
-		GLX_RED_SIZE, 1,
-		GLX_GREEN_SIZE, 1,
-		GLX_BLUE_SIZE, 1,
-		GLX_DOUBLEBUFFER, True,
+		GLX_X_RENDERABLE,	True,
+		GLX_DRAWABLE_TYPE,	GLX_WINDOW_BIT,
+		GLX_RENDER_TYPE,	GLX_RGBA_BIT,
+		GLX_X_VISUAL_TYPE,	GLX_TRUE_COLOR,
+		GLX_RED_SIZE,		8,
+		GLX_GREEN_SIZE,		8,
+		GLX_BLUE_SIZE,		8,
+		GLX_ALPHA_SIZE,		8,
 		None
 	};
 
@@ -42,13 +46,27 @@ void initWindow(xwin *win)
 	win->width = cfg.width, win->height = cfg.height;
 
 	int elemc;
-	win->fbc = glXChooseFBConfig(win->display, win->screenNum, NULL, &elemc);
-	if (!win->fbc) {
+	win->fbcs = glXChooseFBConfig(win->display, win->screenNum, attr, &elemc);
+	if (!win->fbcs) {
 		printf("Couldn't get FB configs\n");
 		exit(1);
 	}
 
-	win->vi = glXChooseVisual(win->display, win->screenNum, attr);
+	for (int i = 0; i < elemc; i++) {
+		win->vi = (XVisualInfo *)glXGetVisualFromFBConfig(win->display, win->fbcs[i]);
+		if (!win->vi)
+			   continue;
+
+		win->pict = XRenderFindVisualFormat(win->display, win->vi->visual);
+		if (!win->pict)
+			continue;
+
+		win->fbc = win->fbcs[i];
+		if (win->pict->direct.alphaMask > 0)
+			break;
+	}
+
+	XFree(win->fbcs);
 
 	if (!win->vi) {
 		printf("Couldn't get a visual\n");
@@ -58,7 +76,7 @@ void initWindow(xwin *win)
 	// Window parameters
 	win->swa.background_pixel = 0;
 	win->swa.border_pixel = 0;
-	win->swa.colormap = XCreateColormap(win->display, win->root, win->vi, AllocNone);
+	win->swa.colormap = XCreateColormap(win->display, win->root, win->vi->visual, AllocNone);
 	win->swa.event_mask = StructureNotifyMask | ExposureMask | KeyPressMask;
 	unsigned long mask = CWBackPixel | CWBorderPixel | CWColormap | CWEventMask;
 
@@ -124,11 +142,14 @@ static Window find_desktop_window(xwin *r)
 void initBackground(xwin *win)
 {
 	int attr[] = {
-		GLX_RGBA,
-		GLX_RED_SIZE, 1,
-		GLX_GREEN_SIZE, 1,
-		GLX_BLUE_SIZE, 1,
-		GLX_DOUBLEBUFFER, True,
+		GLX_X_RENDERABLE,	True,
+		GLX_DRAWABLE_TYPE,	GLX_WINDOW_BIT,
+		GLX_RENDER_TYPE,	GLX_RGBA_BIT,
+		GLX_X_VISUAL_TYPE,	GLX_TRUE_COLOR,
+		GLX_RED_SIZE,		8,
+		GLX_GREEN_SIZE,		8,
+		GLX_BLUE_SIZE,		8,
+		GLX_ALPHA_SIZE,		8,
 		None
 	};
 
@@ -144,13 +165,25 @@ void initBackground(xwin *win)
 	}
 
 	int elemc;
-	win->fbc = glXChooseFBConfig(win->display, win->screenNum, NULL, &elemc);
-	if (!win->fbc) {
+	win->fbcs = glXChooseFBConfig(win->display, win->screenNum, attr, &elemc);
+	if (!win->fbcs) {
 		printf("Couldn't get FB configs\n");
 		exit(1);
 	}
 
-	win->vi = glXChooseVisual(win->display, win->screenNum, attr);
+	for (int i = 0; i < elemc; i++) {
+		win->vi = (XVisualInfo *)glXGetVisualFromFBConfig(win->display, win->fbcs[i]);
+		if (!win->vi)
+			   continue;
+
+		win->pict = XRenderFindVisualFormat(win->display, win->vi->visual);
+		if (!win->pict)
+			continue;
+
+		win->fbc = win->fbcs[i];
+		if (win->pict->direct.alphaMask > 0)
+			break;
+	}
 
 	if (!win->vi) {
 		printf("Couldn't get a visual\n");
@@ -165,7 +198,7 @@ void initBackground(xwin *win)
 	win->swa.bit_gravity = 0;
 	win->swa.win_gravity = 0;
 	win->swa.override_redirect = True;
-	win->swa.colormap = XCreateColormap(win->display, win->root, win->vi, AllocNone);
+	win->swa.colormap = XCreateColormap(win->display, win->root, win->vi->visual, AllocNone);
 	win->swa.event_mask = StructureNotifyMask | ExposureMask;
 	unsigned long mask = CWOverrideRedirect | CWBackingStore | CWBackPixel | CWBorderPixel | CWColormap;
 

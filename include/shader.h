@@ -5,17 +5,18 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "config.h"
 #include "opengl.h"
 
 static const char *vertCodeDef =
-        "#version 430\n\
+        "#version 130\n\
         in vec2 pos;\
         void main() {\
                 gl_Position = vec4(pos.x, pos.y, 0.0, 1.0);\
         }";
 
 static const char *fragCodeDef =
-        "#version 430\n\
+        "#version 130\n\
         uniform vec2 resolution;\
         uniform float time;\
         uniform sampler1D samples;\
@@ -23,7 +24,7 @@ static const char *fragCodeDef =
         out vec4 color;\
         void main()\
         {\
-                color = vec4(sin(time), cos(time / 2.0), 0.0, 1.0);\
+                color = vec4(sin(time), cos(time / 2.0), 0.0, 0.1);\
         }";
 
 void checkCompileErrors(unsigned int shader, const char *type);
@@ -43,11 +44,12 @@ GLuint loadShaders(const char *vertPath, const char *fragPath)
         long vertSize = ftell(vertFile);
         fseek(vertFile, 0, SEEK_SET);
 
-        vertCode = malloc(vertSize + 1);
+        vertCode = (char *)malloc(vertSize + 1);
         fread(vertCode, vertSize, 1, vertFile);
     } else {
-        printf("Couldn't load vertex file using default code\n");
-        vertCode = vertCodeDef;
+	if (cfg.debug)
+        	printf("Couldn't load vertex file using default code\n");
+        vertCode = (char *)vertCodeDef;
     }
 
     FILE* fragFile = fopen(fragPath, "r");
@@ -56,15 +58,16 @@ GLuint loadShaders(const char *vertPath, const char *fragPath)
         long fragSize = ftell(fragFile);
         fseek(fragFile, 0, SEEK_SET);
 
-        fragCode = malloc(fragSize + 1);
+        fragCode = (char *)malloc(fragSize + 1);
         fread(fragCode, fragSize, 1, fragFile);
     } else {
-        printf("Couldn't load fragment file using default code\n");
-        fragCode = fragCodeDef;
+	if (cfg.debug)
+	        printf("Couldn't load fragment file using default code\n");
+        fragCode = (char *)fragCodeDef;
     }
 
-    glShaderSource(vert, 1, &vertCode, NULL);
-    glShaderSource(frag, 1, &fragCode, NULL);
+    glShaderSource(vert, 1, (const char **)&vertCode, NULL);
+    glShaderSource(frag, 1, (const char **)&fragCode, NULL);
 
     glCompileShader(vert);
     checkCompileErrors(vert, "VERTEX");
