@@ -29,15 +29,20 @@ xwin *init_xwin()
 void initWindow(xwin *win)
 {
 	int attr[] = {
-		GLX_X_RENDERABLE,	True,
-		GLX_DRAWABLE_TYPE,	GLX_WINDOW_BIT,
-		GLX_RENDER_TYPE,	GLX_RGBA_BIT,
-		GLX_X_VISUAL_TYPE,	GLX_TRUE_COLOR,
-		GLX_RED_SIZE,		8,
-		GLX_GREEN_SIZE,		8,
-		GLX_BLUE_SIZE,		8,
-		GLX_ALPHA_SIZE,		8,
-		None
+      GLX_X_RENDERABLE    , True,
+      GLX_DRAWABLE_TYPE   , GLX_WINDOW_BIT,
+      GLX_RENDER_TYPE     , GLX_RGBA_BIT,
+      GLX_X_VISUAL_TYPE   , GLX_TRUE_COLOR,
+      GLX_RED_SIZE        , 8,
+      GLX_GREEN_SIZE      , 8,
+      GLX_BLUE_SIZE       , 8,
+      GLX_ALPHA_SIZE      , 8,
+      GLX_DEPTH_SIZE      , 24,
+      GLX_STENCIL_SIZE    , 8,
+      GLX_DOUBLEBUFFER    , True,
+      //GLX_SAMPLE_BUFFERS  , 1,
+      //GLX_SAMPLES         , 4,
+      None
 	};
 
 	win->screenNum = DefaultScreen(win->display);
@@ -58,6 +63,7 @@ void initWindow(xwin *win)
 			   continue;
 
 		win->pict = XRenderFindVisualFormat(win->display, win->vi->visual);
+		XFree(win->vi);
 		if (!win->pict)
 			continue;
 
@@ -68,6 +74,7 @@ void initWindow(xwin *win)
 
 	XFree(win->fbcs);
 
+	win->vi = (XVisualInfo *)glXGetVisualFromFBConfig(win->display, win->fbc);
 	if (!win->vi) {
 		printf("Couldn't get a visual\n");
 		exit(1);
@@ -142,15 +149,20 @@ static Window find_desktop_window(xwin *r)
 void initBackground(xwin *win)
 {
 	int attr[] = {
-		GLX_X_RENDERABLE,	True,
-		GLX_DRAWABLE_TYPE,	GLX_WINDOW_BIT,
-		GLX_RENDER_TYPE,	GLX_RGBA_BIT,
-		GLX_X_VISUAL_TYPE,	GLX_TRUE_COLOR,
-		GLX_RED_SIZE,		8,
-		GLX_GREEN_SIZE,		8,
-		GLX_BLUE_SIZE,		8,
-		GLX_ALPHA_SIZE,		8,
-		None
+      GLX_X_RENDERABLE    , True,
+      GLX_DRAWABLE_TYPE   , GLX_WINDOW_BIT,
+      GLX_RENDER_TYPE     , GLX_RGBA_BIT,
+      GLX_X_VISUAL_TYPE   , GLX_TRUE_COLOR,
+      GLX_RED_SIZE        , 8,
+      GLX_GREEN_SIZE      , 8,
+      GLX_BLUE_SIZE       , 8,
+      GLX_ALPHA_SIZE      , 8,
+      GLX_DEPTH_SIZE      , 24,
+      GLX_STENCIL_SIZE    , 8,
+      GLX_DOUBLEBUFFER    , True,
+      //GLX_SAMPLE_BUFFERS  , 1,
+      //GLX_SAMPLES         , 4,
+      None
 	};
 
 	win->screenNum = DefaultScreen(win->display);
@@ -177,6 +189,7 @@ void initBackground(xwin *win)
 			   continue;
 
 		win->pict = XRenderFindVisualFormat(win->display, win->vi->visual);
+		XFree(win->vi);
 		if (!win->pict)
 			continue;
 
@@ -185,6 +198,9 @@ void initBackground(xwin *win)
 			break;
 	}
 
+	XFree(win->fbcs);
+
+	win->vi = (XVisualInfo *)glXGetVisualFromFBConfig(win->display, win->fbc);
 	if (!win->vi) {
 		printf("Couldn't get a visual\n");
 		exit(1);
@@ -217,3 +233,4 @@ void swapBuffers(xwin *win) {
 	glXSwapBuffers(win->display, win->window);
     checkErrors("Swapping buffs");
 }
+

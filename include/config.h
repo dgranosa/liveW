@@ -12,9 +12,7 @@ struct config {
     bool windowed;
     float width, height;
     float transparency;
-    float alpha;
     char *shaderName;
-    char *imagePath;
     unsigned int fps;
 } cfg;
 

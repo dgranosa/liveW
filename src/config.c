@@ -9,7 +9,6 @@ void printHelp()
     printf("   -w Window mode                                                           \n");
     printf("   -g Window geometry WIDTHxHEIGHT (default 800x600)                        \n");
     printf("   -t Transparency (default 0.8)                                            \n");
-    printf("   -T Transparency variable passed to shader                                \n");
     printf("   -p Shader name in Shaders folder                                         \n");
     printf("   -f FPS (default 30)                                                      \n");
     printf("   -s Pulseaudio device source                                              \n");
@@ -28,7 +27,7 @@ bool parseArgs(int argc, char *argv[])
     cfg.fps = 30;
 
     char c;
-    const char *opt_str = "hdws:t:T:g:f:p:i:";
+    const char *opt_str = "hdws:t:g:f:p:";
     while ((c = getopt(argc, argv, opt_str)) != -1) {
         switch (c) {
             case 'h':
@@ -46,17 +45,11 @@ bool parseArgs(int argc, char *argv[])
             case 't':
                 sscanf(optarg, "%f", &cfg.transparency);
                 break;
-            case 'T':
-                sscanf(optarg, "%f", &cfg.alpha);
-                break;
             case 'g':
                 sscanf(optarg, "%fx%f", &cfg.width, &cfg.height);
                 break;
             case 'p':
                 cfg.shaderName = strdup(optarg);
-                break;
-            case 'i':
-                cfg.imagePath = strdup(optarg);
                 break;
             case 'f':
                 sscanf(optarg, "%u", &cfg.fps);

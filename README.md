@@ -48,7 +48,6 @@ $ ./liveW -h
    #version 430
    uniform vec2 resolution;
    uniform float time;
-   uniform float transparency;
    uniform sampler1D samples;
    uniform sampler1D fft;
    out vec4 color;

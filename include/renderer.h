@@ -10,13 +10,10 @@
 
 typedef struct renderer {
 	xwin *win;
-	GLXContext ctx;
-
     GLuint progID;
-
     GLuint audioSamples;
     GLuint audioFFT;
-    GLuint image;
+	GLXContext ctx;
 } renderer;
 
 renderer *init_rend();

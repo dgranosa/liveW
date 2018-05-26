@@ -5,18 +5,17 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "config.h"
 #include "opengl.h"
 
 static const char *vertCodeDef =
-        "#version 130\n\
+        "#version 430\n\
         in vec2 pos;\
         void main() {\
                 gl_Position = vec4(pos.x, pos.y, 0.0, 1.0);\
         }";
 
 static const char *fragCodeDef =
-        "#version 130\n\
+        "#version 430\n\
         uniform vec2 resolution;\
         uniform float time;\
         uniform sampler1D samples;\
@@ -24,7 +23,7 @@ static const char *fragCodeDef =
         out vec4 color;\
         void main()\
         {\
-                color = vec4(sin(time), cos(time / 2.0), 0.0, 0.1);\
+                color = vec4(sin(time), cos(time / 2.0), 0.0, 0.6);\
         }";
 
 void checkCompileErrors(unsigned int shader, const char *type);
@@ -47,7 +46,7 @@ GLuint loadShaders(const char *vertPath, const char *fragPath)
         vertCode = (char *)malloc(vertSize + 1);
         fread(vertCode, vertSize, 1, vertFile);
     } else {
-	if (cfg.debug)
+		if (cfg.debug)
         	printf("Couldn't load vertex file using default code\n");
         vertCode = (char *)vertCodeDef;
     }
@@ -61,8 +60,8 @@ GLuint loadShaders(const char *vertPath, const char *fragPath)
         fragCode = (char *)malloc(fragSize + 1);
         fread(fragCode, fragSize, 1, fragFile);
     } else {
-	if (cfg.debug)
-	        printf("Couldn't load fragment file using default code\n");
+		if (cfg.debug)
+        	printf("Couldn't load fragment file using default code\n");
         fragCode = (char *)fragCodeDef;
     }
 

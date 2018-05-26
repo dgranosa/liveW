@@ -8,10 +8,10 @@ renderer *init_rend()
     r->win = init_xwin();
 
 	int gl3attr[] = {
-        	GLX_CONTEXT_MAJOR_VERSION_ARB, 4,
-	        GLX_CONTEXT_MINOR_VERSION_ARB, 3,
-        	GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_CORE_PROFILE_BIT_ARB,
-	        GLX_CONTEXT_FLAGS_ARB, GLX_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
+        GLX_CONTEXT_MAJOR_VERSION_ARB, 4,
+        GLX_CONTEXT_MINOR_VERSION_ARB, 3,
+        GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_CORE_PROFILE_BIT_ARB,
+        GLX_CONTEXT_FLAGS_ARB, GLX_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
 		None
     };
 
@@ -43,13 +43,14 @@ renderer *init_rend()
 	glGetIntegerv(GL_NUM_EXTENSIONS, &extCount);
 	Bool found = False;
 	for (int i = 0; i < extCount; ++i)
-		if (cfg.debug && !strcmp((const char*)glGetStringi(GL_EXTENSIONS, i), "GL_ARB_compute_shader")) {
-			printf("Extension \"GL_ARB_compute_shader\" found\n");
+		if (!strcmp((const char*)glGetStringi(GL_EXTENSIONS, i), "GL_ARB_compute_shader")) {
+			if (cfg.debug)
+				printf("Extension \"GL_ARB_compute_shader\" found\n");
 			found = True;
 			break;
 		}
 
-	if (cfg.debug && !found) {
+	if (!found) {
 		printf("Extension \"GL_ARB_compute_shader\" not found\n");
 		exit(1);
 	}
@@ -81,7 +82,7 @@ void linkBuffers(renderer *r)
 		1.0f, 1.0f
 	};
     glBufferData(GL_ARRAY_BUFFER, sizeof(float)*8, data, GL_STREAM_DRAW);
-    GLint posPtr = glGetAttribLocation(r->progID, "pos");
+	GLint posPtr = glGetAttribLocation(r->progID, "pos");
     glVertexAttribPointer(posPtr, 2, GL_FLOAT, GL_FALSE, 0, 0);
     glEnableVertexAttribArray(posPtr);
 
@@ -114,7 +115,7 @@ void render(renderer *r, float *sampleBuff, float *fftBuff, int buffSize)
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_1D, r->audioSamples);
-    glTexImage1D(GL_TEXTURE_1D, 0, GL_R16, buffSize/2, 0, GL_RED, GL_FLOAT, sampleBuff + buffSize/2);
+    glTexImage1D(GL_TEXTURE_1D, 0, GL_R16, buffSize, 0, GL_RED, GL_FLOAT, sampleBuff);
 
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_1D, r->audioFFT);
@@ -125,9 +126,6 @@ void render(renderer *r, float *sampleBuff, float *fftBuff, int buffSize)
 
     GLint resolutionLoc = glGetUniformLocation(r->progID, "resolution");
     if (resolutionLoc != -1) glUniform2f(resolutionLoc, (float)r->win->width, (float)r->win->height);
-
-    GLint transparencyLoc = glGetUniformLocation(r->progID, "transparency");
-    if (transparencyLoc != -1) glUniform1f(transparencyLoc, cfg.transparency);
 
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
