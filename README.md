@@ -4,6 +4,7 @@ Live background wallpaper in opengl for i3. It's made for shaders from [Shaderto
 # Requirements:
  - Pulseaudio
  - FFTW
+ - Compton (optional)
  
 # Compiling:
 ```
@@ -40,7 +41,16 @@ $ ./liveW -h
      -s Pulseaudio device source                                              
         Specify using the name from "pacmd list-sources | grep "name:""
 ```
-# Using shaders from Shadertoy
+
+# Multi monitor setup:
+In most multi monitor configurations all monitors are part of one X11 screen so maybe liveW will be strached through all monitors.
+To set liveW to draw on one monitor use arguments -g (set width and height of window) and -o (distance of top-left corner of window and top-left corner of screen).
+## Example:
+If you have two monitors vertically placed with resolution 2560x1440.
+First monitor: ```./liveW -g 2560x1440```
+Second monitor: ```./liveW -g 2560x1440 -o 2560x0```
+
+# Using shaders from Shadertoy:
 **NOTE: liveW have only support for music input for now**
   1. Create directory inside Shaders/ and copy shader code in file frag.glsl inside created folder.
   2. Add to begining of the shader:
