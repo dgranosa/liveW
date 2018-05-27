@@ -10,6 +10,8 @@ struct config {
     int debug;
     char *src;
     bool windowed;
+    bool geometry;
+    float offX, offY;
     float width, height;
     float transparency;
     char *shaderName;

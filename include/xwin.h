@@ -24,6 +24,7 @@ typedef struct xwin {
 	XRenderPictFormat *pict;
 	Colormap cmap;
 
+	GLint offX, offY;
 	GLint width, height;
 } xwin;
 
