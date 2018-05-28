@@ -34,10 +34,12 @@ $ ./liveW -h
      -h Print help                                                            
      -d Turn debug on                                                         
      -w Window mode                                                           
-     -g Window geometry WIDTHxHEIGHT (default 800x600)                        
+     -g Geometry WIDTHxHEIGHT (default 800x600) 
+     -o Starting point TOPxLEFT (default 0x0)
      -t Transparency (default 0.8)                                            
      -p Shader name in Shaders folder                                         
-     -f FPS (default 30)                                                      
+     -f FPS (default 30)       
+     -D Display only if there is sound
      -s Pulseaudio device source                                              
         Specify using the name from "pacmd list-sources | grep "name:""
 ```
@@ -54,7 +56,7 @@ Second monitor: ```./liveW -g 2560x1440 -o 2560x0```
 **NOTE: liveW have only support for music input for now**
   1. Create directory inside Shaders/ and copy shader code in file frag.glsl inside created folder.
   2. Add to begining of the shader:
-   ```
+   ```glsl
    #version 430
    uniform vec2 resolution;
    uniform float time;
