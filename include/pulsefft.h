@@ -29,7 +29,6 @@ enum w_type {
 
 typedef struct pa_fft {
     pthread_t thread;
-    bool stop;
     int cont;
 
     pa_simple *s;

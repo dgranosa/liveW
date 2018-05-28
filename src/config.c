@@ -12,6 +12,7 @@ void printHelp()
     printf("   -t Transparency (default 0.8)                                            \n");
     printf("   -p Shader name in Shaders folder                                         \n");
     printf("   -f FPS (default 30)                                                      \n");
+    printf("   -D Don't draw if there is no sound					\n");
     printf("   -s Pulseaudio device source                                              \n");
     printf("      Specify using the name from \"pacmd list-sources | grep \"name:\"\"   \n");
 }
@@ -31,7 +32,7 @@ bool parseArgs(int argc, char *argv[])
     cfg.fps = 30;
 
     char c;
-    const char *opt_str = "hdws:t:g:o:f:p:";
+    const char *opt_str = "hdws:t:g:o:f:p:D";
     while ((c = getopt(argc, argv, opt_str)) != -1) {
         switch (c) {
             case 'h':
@@ -63,6 +64,9 @@ bool parseArgs(int argc, char *argv[])
             case 'f':
                 sscanf(optarg, "%u", &cfg.fps);
                 break;
+	    case 'D':
+		cfg.dontDrawIfNoSound = true;
+		break;
             default:
                 return false;
                 break;

@@ -16,6 +16,7 @@ struct config {
     float transparency;
     char *shaderName;
     unsigned int fps;
+    bool dontDrawIfNoSound;
 } cfg;
 
 void printHelp();

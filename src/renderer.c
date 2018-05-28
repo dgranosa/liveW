@@ -110,6 +110,14 @@ void linkBuffers(renderer *r)
 
 void render(renderer *r, float *sampleBuff, float *fftBuff, int buffSize)
 {
+	if (cfg.dontDrawIfNoSound) {
+	    bool noNewSound = true;
+	    for (int i = 0; i < buffSize; i++)
+		if (*(sampleBuff + i))
+			noNewSound = false;
+   	    if (noNewSound)
+	    	    return;
+	}
 
     glUseProgram(r->progID);
 
@@ -128,11 +136,6 @@ void render(renderer *r, float *sampleBuff, float *fftBuff, int buffSize)
     if (resolutionLoc != -1) glUniform2f(resolutionLoc, (float)r->win->width, (float)r->win->height);
 
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-    checkErrors("Draw screen");
-    swapBuffers(r->win);
-
-    usleep(1000000 / cfg.fps);
 }
 
 void checkErrors(const char *desc) {
