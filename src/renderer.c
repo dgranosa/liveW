@@ -64,8 +64,6 @@ renderer *init_rend()
 
 void linkBuffers(renderer *r)
 {
-    gettimeofday(&start, 0);
-
     glUseProgram(r->progID);
 
 	GLuint vertArray;
