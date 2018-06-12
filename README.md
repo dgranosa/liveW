@@ -7,6 +7,7 @@ Support with displaying currently playing song.
  - FFTW
  - Freetype
  - Compton (optional)
+ - Playerctl (optional)
  
 # Compiling:
 ```
