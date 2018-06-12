@@ -1,9 +1,11 @@
 # liveW
 Live background wallpaper in opengl for i3. It's made for shaders from [Shadertoy.com](shadertoy.com).
+Support with displaying currently playing song.
 
 # Requirements:
  - Pulseaudio
  - FFTW
+ - Freetype
  - Compton (optional)
  
 # Compiling:
