@@ -5,6 +5,9 @@ uniform sampler1D samples;
 uniform sampler1D fft;
 out vec4 color;
 
+#define circleX 0.45
+#define circleY 0.45
+
 vec2 UNIT_VECTOR;
 vec2 UNIT_VECTOR_ASPECT;
 
@@ -64,7 +67,7 @@ float drawEq() {
 }
 
 float drawFlare(float intensity) {
-	return smoothstep(0.3, 1.0, (1.0 - distance(UNIT_VECTOR_ASPECT, vec2(0.45, 0.5))) * intensity);	
+	return smoothstep(0.3, 1.0, (1.0 - distance(UNIT_VECTOR_ASPECT, vec2(circleX, circleY))) * intensity);	
 }
 
 float drawDistortedRing(float radius0, float sharpness) {
@@ -75,7 +78,7 @@ float drawDistortedRing(float radius0, float sharpness) {
 	float a = atan(UNIT_VECTOR_ASPECT.x - 0.5, UNIT_VECTOR_ASPECT.y - 0.5);
 	a = sin(a);
 	
-	float d = distance(UNIT_VECTOR_ASPECT, vec2(0.45, 0.5));
+	float d = distance(UNIT_VECTOR_ASPECT, vec2(circleX, circleY));
 	vec4 tv = texture(fft, a*a);
 	float at = (sin(tv.x) + cos(tv.y)) / 2.0;
 	return smoothstep(radius0 + sharpness, radius0, d * at)
@@ -87,7 +90,7 @@ float drawRing(float radius0, float sharpness) {
 	const float RING_THICKNESS = 0.010;
 	float radius1 = radius0 - RING_THICKNESS;
 	
-	float d = distance(UNIT_VECTOR_ASPECT, vec2(0.45, 0.5));
+	float d = distance(UNIT_VECTOR_ASPECT, vec2(circleX, circleY));
 	return smoothstep(radius0 + sharpness, radius0, d)
 		 * smoothstep(radius1 - sharpness, radius1, d);
 }

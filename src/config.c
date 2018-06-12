@@ -8,7 +8,7 @@ void printHelp()
     printf("   -d Turn debug on                                                         \n");
     printf("   -w Window mode                                                           \n");
     printf("   -g Window geometry WIDTHxHEIGHT (default 800x600)                        \n");
-    printf("   -g Position of window relative to top left corner offXxoffY (default 0x0)\n");
+    printf("   -o Position of window relative to top left corner TOPxLEFT (default 0x0)\n");
     printf("   -t Transparency (default 0.8)                                            \n");
     printf("   -p Shader name in Shaders folder                                         \n");
     printf("   -f FPS (default 30)                                                      \n");
@@ -30,9 +30,10 @@ bool parseArgs(int argc, char *argv[])
     cfg.transparency = 0.8;
     cfg.shaderName = NULL;
     cfg.fps = 30;
+    cfg.fontName = "OpenSans.ttf";
 
     char c;
-    const char *opt_str = "hdws:t:g:o:f:p:D";
+    const char *opt_str = "hdws:t:g:o:f:p:DF:";
     while ((c = getopt(argc, argv, opt_str)) != -1) {
         switch (c) {
             case 'h':
@@ -66,6 +67,9 @@ bool parseArgs(int argc, char *argv[])
                 break;
 	    case 'D':
 		cfg.dontDrawIfNoSound = true;
+		break;
+	    case 'F':
+		cfg.fontName = strdup(optarg);
 		break;
             default:
                 return false;

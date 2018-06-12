@@ -36,37 +36,41 @@ GLuint loadShaders(const char *vertPath, const char *fragPath)
 
     char *vertCode;
     char *fragCode;
+    int vertSize = 0;
+    int fragSize = 0;
 
     FILE* vertFile = fopen(vertPath, "r");
     if (vertFile) {
         fseek(vertFile, 0, SEEK_END);
-        long vertSize = ftell(vertFile);
+        vertSize = ftell(vertFile);
         fseek(vertFile, 0, SEEK_SET);
 
-        vertCode = (char *)malloc(vertSize + 1);
+	vertCode = (char *)malloc(vertSize + 1);
         fread(vertCode, vertSize, 1, vertFile);
     } else {
-		if (cfg.debug)
+	if (cfg.debug)
         	printf("Couldn't load vertex file using default code\n");
         vertCode = (char *)vertCodeDef;
+	vertSize = strlen(vertCode);
     }
 
     FILE* fragFile = fopen(fragPath, "r");
     if (fragFile) {
         fseek(fragFile, 0, SEEK_END);
-        long fragSize = ftell(fragFile);
+        fragSize = ftell(fragFile);
         fseek(fragFile, 0, SEEK_SET);
 
         fragCode = (char *)malloc(fragSize + 1);
         fread(fragCode, fragSize, 1, fragFile);
     } else {
-		if (cfg.debug)
+	if (cfg.debug)
         	printf("Couldn't load fragment file using default code\n");
         fragCode = (char *)fragCodeDef;
+	fragSize = strlen(fragCode);
     }
 
-    glShaderSource(vert, 1, (const char **)&vertCode, NULL);
-    glShaderSource(frag, 1, (const char **)&fragCode, NULL);
+    glShaderSource(vert, 1, (const char **)&vertCode, &vertSize);
+    glShaderSource(frag, 1, (const char **)&fragCode, &fragSize);
 
     glCompileShader(vert);
     checkCompileErrors(vert, "VERTEX");

@@ -15,6 +15,7 @@ struct config {
     float width, height;
     float transparency;
     char *shaderName;
+    char *fontName;
     unsigned int fps;
     bool dontDrawIfNoSound;
 } cfg;

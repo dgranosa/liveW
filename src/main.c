@@ -25,6 +25,8 @@ int main(int argc, char *argv[])
     }
     rend->progID = loadShaders(vertPath, fragPath);
 
+    rend->progText = loadShaders("Shaders/text/vert.glsl", "Shaders/text/frag.glsl");
+
     struct pa_fft *ctx = calloc(1, sizeof(struct pa_fft));
     ctx->cont = 1;
     ctx->buffer_samples = 1024;
@@ -49,15 +51,7 @@ int main(int argc, char *argv[])
     pthread_create(&ctx->thread, NULL, pa_fft_thread, ctx);
 
     while(ctx->cont) {
-	glClearColor(0.0, 0.0, 0.0, 0.0);
-	glClear(GL_COLOR_BUFFER_BIT);
-
         render(rend, ctx->pa_buf, ctx->fftBuff, ctx->buffer_samples);
-
-        checkErrors("Draw screen");
-        swapBuffers(rend->win);
-
-    	usleep(1000000 / cfg.fps);
     }
 
     return 0;
