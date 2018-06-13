@@ -52,6 +52,8 @@ int main(int argc, char *argv[])
 
     while(ctx->cont) {
         render(rend, ctx->pa_buf, ctx->fftBuff, ctx->buffer_samples);
+
+	usleep(1000000 / cfg.fps);
     }
 
     return 0;

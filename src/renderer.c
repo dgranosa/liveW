@@ -247,8 +247,11 @@ void render(renderer *r, float *sampleBuff, float *fftBuff, int buffSize)
 		for (int i = 0; i < buffSize; i++)
 			if (*(sampleBuff + i))
 				noNewSound = false;
-			if (noNewSound)
+
+			if (noNewSound) {
+				swapBuffers(r->win);
 				return;
+			}
 	}
 
     glDisable(GL_BLEND);
@@ -301,10 +304,8 @@ void render(renderer *r, float *sampleBuff, float *fftBuff, int buffSize)
 		renderText(r, time, -1.0f, 800.0f, 3.0f, textColor);
 	}
 
-        checkErrors("Draw screen");
-        swapBuffers(r->win);
-
-    	usleep(1000000 / cfg.fps);
+	checkErrors("Draw screen");
+	swapBuffers(r->win);
 }
 
 void checkErrors(const char *desc) {
