@@ -2,6 +2,7 @@
 #include <pthread.h>
 #include <string.h>
 
+#include "utils.h"
 #include "config.h"
 #include "shader.h"
 #include "renderer.h"
@@ -49,11 +50,12 @@ int main(int argc, char *argv[])
     linkBuffers(rend);
 
     pthread_create(&ctx->thread, NULL, pa_fft_thread, ctx);
+    pthread_create(&rend->songInfo.thread, NULL, updateSongInfo, &rend->songInfo);
 
     while(ctx->cont) {
         render(rend, ctx->pa_buf, ctx->fftBuff, ctx->buffer_samples);
 
-	usleep(1000000 / cfg.fps);
+		usleep(1000000 / cfg.fps);
     }
 
     return 0;

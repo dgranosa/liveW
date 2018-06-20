@@ -1,6 +1,5 @@
 #ifndef _RENDERER_H
 #define _RENDERER_H
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -9,6 +8,7 @@
 #include FT_FREETYPE_H
 
 #include "xwin.h"
+#include "utils.h"
 #include "config.h"
 
 typedef struct renderer {
@@ -17,6 +17,8 @@ typedef struct renderer {
     GLuint audioSamples;
     GLuint audioFFT;
 	GLXContext ctx;
+
+	SongInfo songInfo;
 } renderer;
 
 GLuint vertArray, posBuf;
