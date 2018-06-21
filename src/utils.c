@@ -60,8 +60,6 @@ int getSongInfo(char *artist, char *title)
 		return -1;
 	}
 
-	printf("%s\n", buff);
-
 	if (strlen(newArtist)) {
 		strcpy(artist, newArtist);
 		strcpy(title, buff);
@@ -116,26 +114,59 @@ int getSongInfo(char *artist, char *title)
 
 void getAlbumArt(SongInfo *songInfo) {
 	char *cmd;
-	char buff[16];
+	char buff[64];
 
 	cmd = (char *)malloc(20 + strlen(songInfo->artist) + strlen(songInfo->title));
 
 	sprintf(cmd, "./albumArt \"%s %s\"", songInfo->artist, songInfo->title);
 
 	if (exec(cmd, buff, sizeof(buff))) {
-		printf("albumArt file not found\n");
+		printf("albumArt script not found\n");
 		return;
 	}
 	
 	if (cfg.debug && strlen(buff))
-		printf("%s\n", buff);
+		printf("albumArt script output (%d): %s\n", (int)strlen(buff), buff);
+
 	if (!strlen(buff)) {
+
 		songInfo->newAlbumArt = true;
 		if (cfg.debug)
 			printf("New album art\n");
+
 	} else {
+
 		if (cfg.debug)
-			printf("No album art found\n");
+			printf("No album art found using youtube thumbnail\n");
+		
+		if (exec("playerctl metadata mpris:trackid", buff, sizeof(buff)) || !strlen(buff)) {
+			if (cfg.debug)
+				printf("No youtube video ID\n");
+			return;
+		}
+
+		int buffLenght = strlen(buff);
+		if (cfg.debug)
+			printf("TrackID (%d): %s\n", buffLenght, buff);
+
+		char videoID[12];
+		for (int i = buffLenght - 12; i < buffLenght - 1; i++)
+			videoID[i - (buffLenght - 12)] = buff[i];
+		videoID[11] = '\0';
+
+		if (cfg.debug) 
+			printf("Video ID: %s\n", videoID);
+
+		free(cmd);
+		cmd = (char *)malloc(strlen("curl -o image.jpg -s https://i.ytimg.com/vi/MU3iiHjE9ok/hqdefault.jpg") + 1);
+		sprintf(cmd, "curl -o image.jpg -s https://i.ytimg.com/vi/%s/hqdefault.jpg", videoID);
+
+		if (exec(cmd, buff, sizeof(buff))) {
+			if (cfg.debug)
+				printf("Problem with downloding youtube thumbnail\n");
+		}
+
+		songInfo->newAlbumArt = true;
 	}
 
 	free(cmd);
@@ -152,7 +183,7 @@ void *updateSongInfo(void *arg)
 			return NULL;
 		
 		if (cfg.debug)
-			printf("%s\n%s\n\n", songInfo->artist, songInfo->title);
+			printf("Artist: %s\nTitle: %s\n", songInfo->artist, songInfo->title);
 
 		if (status == 1)
 			getAlbumArt(songInfo);
