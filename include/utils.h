@@ -9,11 +9,16 @@
 #include <stdbool.h>
 #include <sys/time.h>
 
+#include "config.h"
+
 typedef struct SongInfo {
 	pthread_t thread;
 	char artist[64];
 	char title[64];
-	char *albumArt;
+
+	bool newAlbumArt;
+	int width, height, nrChannels;
+	unsigned char *albumArt;
 } SongInfo;
 
 float getUnixTime();

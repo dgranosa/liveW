@@ -1,0 +1,28 @@
+#!/bin/sh
+# Script by ddrzaic
+# https://github.com/ddrzaic
+
+METADATA=$1
+METADATA=${METADATA// /+}
+
+rm --force image.jpg
+
+curl -A 'random_ua' --output temp "https://www.discogs.com/search/?q=$METADATA&type=release" -s
+wait
+
+img_src=$(cat temp | grep "img data-src")
+img_src=${img_src#*=}
+img_src=${img_src/src*/ }
+img_src=$(echo "$img_src" | tr -d '"')
+
+if [[ -n "${img_src/[ ]*\n/}" ]]
+then
+
+    	#execute if the the variable is not empty and contains non space characters (album art exists)
+	curl --output image.jpg $img_src -s
+
+else
+    	echo Album art not found!
+fi
+
+rm temp

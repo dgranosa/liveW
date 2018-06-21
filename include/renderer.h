@@ -18,6 +18,7 @@ typedef struct renderer {
     GLuint audioFFT;
 	GLXContext ctx;
 
+	GLuint albumArt;
 	SongInfo songInfo;
 } renderer;
 

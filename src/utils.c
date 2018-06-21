@@ -66,6 +66,11 @@ int getSongInfo(char *artist, char *title)
 		return 0;
 	}
 
+	if (!strlen(buff)) {
+		artist[0] = title[0] = '\n';
+		return 2;	
+	}
+
 	bool dash = false;
 	int artistPos = 0, titlePos = 0;
 	for (int i = 0; i < strlen(buff); i++) {
@@ -91,16 +96,46 @@ int getSongInfo(char *artist, char *title)
 		newArtist[0] = '\0';
 	}
 
+	if (strlen(newTitle) && newTitle[strlen(newTitle)-1] == ' ')
+		newTitle[strlen(newTitle)-1] = '\0';
+
+	if (strlen(newArtist) && newArtist[strlen(newArtist)-1] == ' ')
+		newArtist[strlen(newArtist)-1] = '\0';
+
+	if (!strcmp(artist, newArtist) && !strcmp(title, newTitle))
+		return 0;
+
 	strcpy(artist, newArtist);
 	strcpy(title, newTitle);
 
-	if (strlen(title) && title[strlen(title)-1] == ' ')
-		title[strlen(title)-1] = '\0';
+	return 1;
+}
 
-	if (strlen(artist) && artist[strlen(artist)-1] == ' ')
-		artist[strlen(artist)-1] = '\0';
+void getAlbumArt(SongInfo *songInfo) {
+	char *cmd;
+	char buff[16];
 
-	return 0;
+	cmd = (char *)malloc(20 + strlen(songInfo->artist) + strlen(songInfo->title));
+
+	sprintf(cmd, "./albumArt \"%s %s\"", songInfo->artist, songInfo->title);
+
+	if (exec(cmd, buff, sizeof(buff))) {
+		printf("albumArt file not found\n");
+		return;
+	}
+	
+	if (cfg.debug && strlen(buff))
+		printf("%s\n", buff);
+	if (!strlen(buff)) {
+		songInfo->newAlbumArt = true;
+		if (cfg.debug)
+			printf("New album art\n");
+	} else {
+		if (cfg.debug)
+			printf("No album art found\n");
+	}
+
+	free(cmd);
 }
 
 void *updateSongInfo(void *arg)
@@ -108,7 +143,10 @@ void *updateSongInfo(void *arg)
 	while (true) {
 		SongInfo *songInfo = (struct SongInfo *)arg;
 
-		getSongInfo(songInfo->artist, songInfo->title);
+
+		if (getSongInfo(songInfo->artist, songInfo->title) == 1) {
+			getAlbumArt(songInfo);
+		}
 
 		sleep(1);
 	}

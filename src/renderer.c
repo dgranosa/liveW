@@ -1,5 +1,8 @@
 #include "renderer.h"
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 renderer *init_rend()
 {
     renderer *r = (renderer *)malloc(sizeof(struct renderer));
@@ -97,8 +100,16 @@ void linkBuffers(renderer *r)
     glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-    glUniform1i(glGetUniformLocation(r->progID, "samples"), 0);
+	glGenTextures(1, &r->albumArt);
+	glBindTexture(GL_TEXTURE_2D, r->albumArt);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	glUniform1i(glGetUniformLocation(r->progID, "samples"), 0);
     glUniform1i(glGetUniformLocation(r->progID, "fft"), 1);
+    glUniform1i(glGetUniformLocation(r->progID, "albumArt"), 2);
 
     checkErrors("Linking textures");
 
@@ -265,6 +276,22 @@ void render(renderer *r, float *sampleBuff, float *fftBuff, int buffSize)
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_1D, r->audioFFT);
     glTexImage1D(GL_TEXTURE_1D, 0, GL_R16, buffSize/2, 0, GL_RED, GL_FLOAT, fftBuff);
+
+	if (r->songInfo.newAlbumArt) {
+
+		stbi_set_flip_vertically_on_load(true);
+		r->songInfo.albumArt = stbi_load("image.jpg", &r->songInfo.width, &r->songInfo.height, &r->songInfo.nrChannels, 0);
+		if (r->songInfo.albumArt) {
+			glActiveTexture(GL_TEXTURE2);
+    		glBindTexture(GL_TEXTURE_2D, r->albumArt);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, r->songInfo.width, r->songInfo.height, 0, GL_RGB, GL_UNSIGNED_BYTE, r->songInfo.albumArt);
+		} else {
+			if (cfg.debug)
+				printf("Couldn't load album art\n");
+		}
+
+		r->songInfo.newAlbumArt = false;
+	}
 
     GLint timeLoc = glGetUniformLocation(r->progID, "time");
     if (timeLoc != -1) glUniform1f(timeLoc, getUnixTime());
