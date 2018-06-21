@@ -43,7 +43,7 @@ int exec(char *cmd, char *buf, int size)
 int getSongInfo(char *artist, char *title)
 {
 	char buff[256];
-	char newArtist[64], newTitle[64];
+	char newArtist[128], newTitle[128];
 	buff[0] = newArtist[0] = newTitle[0] = '\0';
 
 	
@@ -60,6 +60,8 @@ int getSongInfo(char *artist, char *title)
 		return -1;
 	}
 
+	printf("%s\n", buff);
+
 	if (strlen(newArtist)) {
 		strcpy(artist, newArtist);
 		strcpy(title, buff);
@@ -67,14 +69,15 @@ int getSongInfo(char *artist, char *title)
 	}
 
 	if (!strlen(buff)) {
-		artist[0] = title[0] = '\n';
-		return 2;	
+		artist[0] = title[0] = '\0';
+		exec("rm --force image.jpg", buff, sizeof(buff));
+		return 2;
 	}
 
 	bool dash = false;
 	int artistPos = 0, titlePos = 0;
 	for (int i = 0; i < strlen(buff); i++) {
-		if (buff[i] == '-') {
+		if (i && buff[i-1] == ' ' && buff[i] == '-' && buff[i+1] == ' ') {
 			dash = true;
 			i++;
 			continue;
@@ -144,9 +147,17 @@ void *updateSongInfo(void *arg)
 		SongInfo *songInfo = (struct SongInfo *)arg;
 
 
-		if (getSongInfo(songInfo->artist, songInfo->title) == 1) {
+		int status = getSongInfo(songInfo->artist, songInfo->title);
+		if (status == -1)
+			return NULL;
+		
+		if (cfg.debug)
+			printf("%s\n%s\n\n", songInfo->artist, songInfo->title);
+
+		if (status == 1)
 			getAlbumArt(songInfo);
-		}
+		else if (status == 2)
+			songInfo->newAlbumArt = true;
 
 		sleep(1);
 	}

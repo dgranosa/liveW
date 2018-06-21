@@ -13,8 +13,8 @@
 
 typedef struct SongInfo {
 	pthread_t thread;
-	char artist[64];
-	char title[64];
+	char artist[128];
+	char title[128];
 
 	bool newAlbumArt;
 	int width, height, nrChannels;

@@ -30,7 +30,8 @@ void main() {
         return;
     }
 
-    if (IMAGE_X <= uv.x && uv.x <= IMAGE_X + IMAGE_WIDTH
+    if (textureSize(albumArt, 0).x > 1
+     && IMAGE_X <= uv.x && uv.x <= IMAGE_X + IMAGE_WIDTH
      && IMAGE_Y <= uv.y && uv.y <= IMAGE_Y + IMAGE_HEIGHT) {
 
 		color = texture(albumArt, (uv - vec2(IMAGE_X, IMAGE_Y)) / vec2(IMAGE_WIDTH, IMAGE_HEIGHT));

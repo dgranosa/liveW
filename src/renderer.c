@@ -288,9 +288,17 @@ void render(renderer *r, float *sampleBuff, float *fftBuff, int buffSize)
 		} else {
 			if (cfg.debug)
 				printf("Couldn't load album art\n");
+			glActiveTexture(GL_TEXTURE2);
+    		glBindTexture(GL_TEXTURE_2D, r->albumArt);
+
+			unsigned char tmp[3] = {255, 255, 255};
+
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_UNSIGNED_BYTE, tmp);
+
 		}
 
 		r->songInfo.newAlbumArt = false;
+		stbi_image_free(r->songInfo.albumArt);
 	}
 
     GLint timeLoc = glGetUniformLocation(r->progID, "time");
@@ -307,10 +315,6 @@ void render(renderer *r, float *sampleBuff, float *fftBuff, int buffSize)
 
 	char *time;
 	time = getSystemTime();
-
-
-	if (cfg.debug)
-		printf("%s\n%s\n\n", r->songInfo.artist, r->songInfo.title);
 
 	if (cfg.shaderName && !strcmp(cfg.shaderName, "black")) {
 		float textColor[] = {0.0, 0.0, 0.0};
