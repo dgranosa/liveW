@@ -158,8 +158,19 @@ void getAlbumArt(SongInfo *songInfo) {
 		}
 
 		char videoID[12];
-		for (int i = buffLenght - 12; i < buffLenght - 1; i++)
-			videoID[i - (buffLenght - 12)] = buff[i];
+		int start = buffLenght;
+		while (buff[--start] != '/');
+
+		for (int i = start + 1, j = 0; i < buffLenght - 1; i++, j++) {
+			if (buff[i] == '_') {
+				if (buff[++i] == 'd')
+					videoID[j] = '-';
+				else if (buff[++i] == 'u')
+					videoID[j] = '_';
+			} else {
+				videoID[j] = buff[i];
+			}
+		}
 		videoID[11] = '\0';
 
 		if (cfg.debug) 
