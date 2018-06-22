@@ -187,7 +187,7 @@ void linkBuffers(renderer *r)
 	checkErrors("Loading font");
 }
 
-void renderText(renderer *r, char *text, GLfloat x, GLfloat y, GLfloat scale, float *color) //TODO: Make position to be relative, support for unicode, better rasterisation
+void renderText(renderer *r, char *text, GLfloat x, GLfloat y, GLfloat scale, float *color) //TODO: support unicode
 {
 	glUseProgram(r->progText);
     glUniform3f(glGetUniformLocation(r->progText, "textColor"), color[0], color[1], color[2]);
@@ -206,11 +206,14 @@ void renderText(renderer *r, char *text, GLfloat x, GLfloat y, GLfloat scale, fl
 	}
 
 	if (x == -1.0)
-		x = (r->win->width - lenght) / 2.0;
+		x = (r->win->width - lenght) / 2.0 / r->win->width;
+
+	x *= r->win->width;
+	y *= r->win->height;
 
     for (int i = 0; i < strlen(text); i++)
     {
-		if (text[i] < 0 || text[i] > 127)
+		if (text[i] < 0)
 			continue;
 
         character ch = characters[(int)text[i]];
@@ -318,17 +321,17 @@ void render(renderer *r, float *sampleBuff, float *fftBuff, int buffSize)
 
 	if (cfg.shaderName && !strcmp(cfg.shaderName, "black")) {
 		float textColor[] = {0.0, 0.0, 0.0};
-		renderText(r, r->songInfo.artist, -1.0f, 550.0f, 1.25f, textColor);
-		renderText(r, r->songInfo.title, -1.0f, 450.0f, 0.75f, textColor);
-		renderText(r, time, -1.0f, 800.0f, 3.0f, textColor);
+		renderText(r, r->songInfo.artist, -1.0f, 0.5371f, 1.25f, textColor);
+		renderText(r, r->songInfo.title, -1.0f, 0.4395f, 0.75f, textColor);
+		renderText(r, time, -1.0f, 0.7813f, 3.0f, textColor);
 	} else
 	if (cfg.shaderName && !strcmp(cfg.shaderName, "cat")) {
 		float textColor[] = {1.0, 1.0, 1.0};
-		renderText(r, r->songInfo.artist, 280.0f, 420.0f, 1.0f, textColor);
-		renderText(r, r->songInfo.title, 280.0f, 350.0f, 0.75f, textColor);
+		renderText(r, r->songInfo.artist, 0.2188f, 0.4102f, 1.0f, textColor);
+		renderText(r, r->songInfo.title, 0.2188f, 0.3418f, 0.75f, textColor);
 	} else {
 		float textColor[] = {0.0, 0.0, 0.0};
-		renderText(r, time, -1.0f, 800.0f, 1.5f, textColor);
+		renderText(r, time, -1.0f, 0.7813f, 1.5f, textColor);
 	}
 
 	checkErrors("Draw screen");

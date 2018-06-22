@@ -151,6 +151,12 @@ void getAlbumArt(SongInfo *songInfo) {
 		if (cfg.debug)
 			printf("TrackID (%d): %s\n", buffLenght, buff);
 
+		if (buffLenght < 17) {
+			if (cfg.debug)
+				printf("No youtube video ID\n");
+			return;
+		}
+
 		char videoID[12];
 		for (int i = buffLenght - 12; i < buffLenght - 1; i++)
 			videoID[i - (buffLenght - 12)] = buff[i];
