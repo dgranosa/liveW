@@ -34,16 +34,17 @@ Example: ./liveW -s alsa_output.pci-0000_22_00.3.analog-stereo.monitor -p equali
 $ ./liveW -h
   Usage: liveW <options>                                                      
   Options:                                                                    
-     -h Print help                                                            
-     -d Turn debug on                                                         
-     -w Window mode                                                           
+     -h Print help
+     -d Turn debug on
+     -w Window mode
      -g Geometry WIDTHxHEIGHT (default 800x600) 
      -o Starting point TOPxLEFT (default 0x0)
-     -t Transparency (default 0.8)                                            
-     -p Shader name in Shaders folder                                         
+     -t Transparency (default 0.8)
+     -p Shader name in Shaders folder 
      -f FPS (default 30)       
      -D Display only if there is sound
-     -s Pulseaudio device source                                              
+     -Y Use only youtube thumbnail for album art
+     -s Pulseaudio device source
         Specify using the name from "pacmd list-sources | grep "name:""
 ```
 

@@ -130,7 +130,7 @@ void linkBuffers(renderer *r)
 	}
 	free(fontPath);
 
-	FT_Set_Pixel_Sizes(face, 0, 48);
+	FT_Set_Pixel_Sizes(face, 0, 96);
 
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
@@ -318,17 +318,17 @@ void render(renderer *r, float *sampleBuff, float *fftBuff, int buffSize)
 
 	if (cfg.shaderName && !strcmp(cfg.shaderName, "black")) {
 		float textColor[] = {0.0, 0.0, 0.0};
-		renderText(r, r->songInfo.artist, -1.0f, 550.0f, 2.5f, textColor);
-		renderText(r, r->songInfo.title, -1.0f, 450.0f, 1.5f, textColor);
+		renderText(r, r->songInfo.artist, -1.0f, 550.0f, 1.25f, textColor);
+		renderText(r, r->songInfo.title, -1.0f, 450.0f, 0.75f, textColor);
 		renderText(r, time, -1.0f, 800.0f, 3.0f, textColor);
 	} else
 	if (cfg.shaderName && !strcmp(cfg.shaderName, "cat")) {
 		float textColor[] = {1.0, 1.0, 1.0};
-		renderText(r, r->songInfo.artist, 280.0f, 420.0f, 2.0f, textColor);
-		renderText(r, r->songInfo.title, 280.0f, 350.0f, 1.5f, textColor);
+		renderText(r, r->songInfo.artist, 280.0f, 420.0f, 1.0f, textColor);
+		renderText(r, r->songInfo.title, 280.0f, 350.0f, 0.75f, textColor);
 	} else {
 		float textColor[] = {0.0, 0.0, 0.0};
-		renderText(r, time, -1.0f, 800.0f, 3.0f, textColor);
+		renderText(r, time, -1.0f, 800.0f, 1.5f, textColor);
 	}
 
 	checkErrors("Draw screen");

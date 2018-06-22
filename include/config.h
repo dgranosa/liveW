@@ -18,6 +18,7 @@ struct config {
     char *fontName;
     unsigned int fps;
     bool dontDrawIfNoSound;
+    bool onlyYT;
 } cfg;
 
 void printHelp();
