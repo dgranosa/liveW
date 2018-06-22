@@ -30,11 +30,18 @@ void main() {
         return;
     }
 
-    if (textureSize(albumArt, 0).x > 1
+	vec2 texSize = textureSize(albumArt, 0);
+    if (texSize.x > 1
      && IMAGE_X <= uv.x && uv.x <= IMAGE_X + IMAGE_WIDTH
      && IMAGE_Y <= uv.y && uv.y <= IMAGE_Y + IMAGE_HEIGHT) {
 
-		color = texture(albumArt, (uv - vec2(IMAGE_X, IMAGE_Y)) / vec2(IMAGE_WIDTH, IMAGE_HEIGHT));
+		vec2 p = (uv - vec2(IMAGE_X, IMAGE_Y)) / vec2(IMAGE_WIDTH, IMAGE_HEIGHT);
+		if (texSize.x == texSize.y)
+			color = texture(albumArt, p);
+		else {
+			float r = texSize.y / texSize.x;
+			color = texture(albumArt, vec2(p.x * r + (1.0 - r) / 2.0, p.y));
+		}
 		return;
 	
     }

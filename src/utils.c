@@ -158,8 +158,8 @@ void getAlbumArt(SongInfo *songInfo) {
 			printf("Video ID: %s\n", videoID);
 
 		free(cmd);
-		cmd = (char *)malloc(strlen("curl -o image.jpg -s https://i.ytimg.com/vi/MU3iiHjE9ok/hqdefault.jpg") + 1);
-		sprintf(cmd, "curl -o image.jpg -s https://i.ytimg.com/vi/%s/hqdefault.jpg", videoID);
+		cmd = (char *)malloc(strlen("curl -o image.jpg -s https://i.ytimg.com/vi/MU3iiHjE9ok/maxresdefault.jpg") + 1);
+		sprintf(cmd, "curl -o image.jpg -s https://i.ytimg.com/vi/%s/maxresdefault.jpg", videoID);
 
 		if (exec(cmd, buff, sizeof(buff))) {
 			if (cfg.debug)
