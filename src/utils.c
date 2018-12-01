@@ -140,44 +140,74 @@ void getAlbumArt(SongInfo *songInfo) {
 
 		if (cfg.debug)
 			printf("No album art found using youtube thumbnail\n");
-		
-		if (exec("playerctl metadata mpris:trackid", buff, sizeof(buff)) || !strlen(buff)) {
-			if (cfg.debug)
-				printf("No youtube video ID\n");
-			return;
-		}
 
-		int buffLenght = strlen(buff);
-		if (cfg.debug)
-			printf("TrackID (%d): %s\n", buffLenght, buff);
+        char videoID[12];
 
-		if (buffLenght < 17) {
-			if (cfg.debug)
-				printf("No youtube video ID\n");
-			return;
-		}
+        if (cfg.plasma) {
+            if (exec("playerctl metadata xesam:url", buff, sizeof(buff)) || !strlen(buff)) {
+                if (cfg.debug)
+                    printf("No youtube video ID\n");
+                return;
+            }
 
-		char videoID[12];
-		int start = buffLenght;
-		while (buff[--start] != '/');
+            int buffLenght = strlen(buff);
+            if (cfg.debug)
+                printf("TrackID (%d): %s\n", buffLenght, buff);
 
-		for (int i = start + 1, j = 0; i < buffLenght - 1; i++, j++) {
-			if (buff[i] == '_') {
-				if (buff[++i] == 'd')
-					videoID[j] = '-';
-				else if (buff[++i] == 'u')
-					videoID[j] = '_';
-			} else {
-				videoID[j] = buff[i];
-			}
-		}
-		videoID[11] = '\0';
+            if (buffLenght < 17) {
+                if (cfg.debug)
+                    printf("No youtube video ID\n");
+                return;
+            }
+
+            int start = buffLenght;
+            while (buff[--start] != '?' || buff[start+1] != 'v');
+            start += 2;
+
+            for (int i = start + 1, j = 0; i < buffLenght && j < 12; i++, j++) {
+                videoID[j] = buff[i];
+            }
+
+            videoID[11] = '\0';
+        } else {
+            if (exec("playerctl metadata mpris:trackid", buff, sizeof(buff)) || !strlen(buff)) {
+                if (cfg.debug)
+                    printf("No youtube video ID\n");
+                return;
+            }
+
+            int buffLenght = strlen(buff);
+            if (cfg.debug)
+                printf("TrackID (%d): %s\n", buffLenght, buff);
+
+            if (buffLenght < 17) {
+                if (cfg.debug)
+                    printf("No youtube video ID\n");
+                return;
+            }
+
+            int start = buffLenght;
+            while (buff[--start] != '/');
+
+            for (int i = start + 1, j = 0; i < buffLenght - 1 && j < 12; i++, j++) {
+                if (buff[i] == '_') {
+                    if (buff[++i] == 'd')
+                        videoID[j] = '-';
+                    else if (buff[++i] == 'u')
+                        videoID[j] = '_';
+                } else {
+                    videoID[j] = buff[i];
+                }
+            }
+
+            videoID[11] = '\0';
+        }
 
 		if (cfg.debug) 
 			printf("Video ID: %s\n", videoID);
 
 		free(cmd);
-		cmd = (char *)malloc(strlen("curl -o image.jpg -s https://i.ytimg.com/vi/MU3iiHjE9ok/hqdefault.jpg") + 1);
+		cmd = (char *)malloc(strlen("curl -o image.jpg -s https://i.ytimg.com/vi/zuJV-DAv_wE/hqdefault.jpg") + 1);
 		sprintf(cmd, "curl -o image.jpg -s https://i.ytimg.com/vi/%s/mqdefault.jpg", videoID);
 
 		if (exec(cmd, buff, sizeof(buff))) {

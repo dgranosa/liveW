@@ -9,6 +9,7 @@
 struct config {
     int debug;
     char *src;
+    bool plasma;
     bool windowed;
     bool geometry;
     float offX, offY;

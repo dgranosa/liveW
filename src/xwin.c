@@ -17,11 +17,19 @@ xwin *init_xwin()
     else
         initBackground(win);
 
+    if (cfg.plasma) {
+        long value = XInternAtom(win->display, "_NET_WM_WINDOW_TYPE_DESKTOP", false);
+        XChangeProperty(win->display, win->window,
+                        XInternAtom(win->display, "_NET_WM_WINDOW_TYPE", false),
+                        XA_ATOM, 32, PropModeReplace, (unsigned char *) &value, 1);
+        XMapWindow(win->display, win->window);
+    }
+
     if (cfg.transparency < 1.0) {
         uint32_t cardinal_alpha = (uint32_t) (cfg.transparency * (uint32_t)-1) ;
         XChangeProperty(win->display, win->window,
                         XInternAtom(win->display, "_NET_WM_WINDOW_OPACITY", 0),
-                        XA_CARDINAL, 32, PropModeReplace, (uint8_t*) &cardinal_alpha,1);
+                        XA_CARDINAL, 32, PropModeReplace, (uint8_t*) &cardinal_alpha, 1);
     }
     return win;
 }
@@ -49,7 +57,13 @@ void initWindow(xwin *win)
 	win->root = RootWindow(win->display, win->screenNum);
 
 	win->offX = cfg.offX, win->offY = cfg.offY;
-	win->width = cfg.width, win->height = cfg.height;
+	if (cfg.geometry) {
+		win->offX = cfg.offX, win->offY = cfg.offY;
+		win->width = cfg.width, win->height = cfg.height;
+	} else {
+		win->width = DisplayWidth(win->display, win->screenNum),
+		win->height = DisplayHeight(win->display, win->screenNum);
+	}
 
 	int elemc;
 	win->fbcs = glXChooseFBConfig(win->display, win->screenNum, attr, &elemc);

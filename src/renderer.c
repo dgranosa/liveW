@@ -252,9 +252,11 @@ void renderText(renderer *r, char *text, GLfloat x, GLfloat y, GLfloat scale, fl
 
 void render(renderer *r, float *sampleBuff, float *fftBuff, int buffSize)
 {
+    // Clear screen
 	glClearColor(0.0, 0.0, 0.0, 0.0);
 	glClear(GL_COLOR_BUFFER_BIT);
 
+    // Doesn't render if there is no sound
 	if (cfg.dontDrawIfNoSound) {
 		bool noNewSound = true;
 		for (int i = 0; i < buffSize; i++)
@@ -267,6 +269,7 @@ void render(renderer *r, float *sampleBuff, float *fftBuff, int buffSize)
 			}
 	}
 
+    // Configure & link opengl
     glDisable(GL_BLEND);
 
 	glUseProgram(r->progID);
@@ -280,8 +283,8 @@ void render(renderer *r, float *sampleBuff, float *fftBuff, int buffSize)
     glBindTexture(GL_TEXTURE_1D, r->audioFFT);
     glTexImage1D(GL_TEXTURE_1D, 0, GL_R16, buffSize/2, 0, GL_RED, GL_FLOAT, fftBuff);
 
+    // Load album art if toggled
 	if (r->songInfo.newAlbumArt) {
-
 		stbi_set_flip_vertically_on_load(true);
 		r->songInfo.albumArt = stbi_load("image.jpg", &r->songInfo.width, &r->songInfo.height, &r->songInfo.nrChannels, 0);
 		if (r->songInfo.albumArt) {
@@ -304,17 +307,18 @@ void render(renderer *r, float *sampleBuff, float *fftBuff, int buffSize)
 		stbi_image_free(r->songInfo.albumArt);
 	}
 
+    // Set uniforms for shaders
     GLint timeLoc = glGetUniformLocation(r->progID, "time");
     if (timeLoc != -1) glUniform1f(timeLoc, getUnixTime());
 
     GLint resolutionLoc = glGetUniformLocation(r->progID, "resolution");
     if (resolutionLoc != -1) glUniform2f(resolutionLoc, (float)r->win->width, (float)r->win->height);
 
+    // Draw screen
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
 
 	char *time;
 	time = getSystemTime();

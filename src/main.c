@@ -10,13 +10,16 @@
 
 int main(int argc, char *argv[])
 {
+    // Parse arguments
     if (!parseArgs(argc, argv)) {
         printHelp();
         return 0;
     }
 
+    // Init renderer
     renderer *rend = init_rend();
 
+    // Load shaders
     char *vertPath = NULL, *fragPath = NULL;
     if (cfg.shaderName) {
         vertPath = (char*)malloc((strlen("Shaders//vert.glsl") + strlen(cfg.shaderName)) * sizeof(char));
@@ -26,8 +29,10 @@ int main(int argc, char *argv[])
     }
     rend->progID = loadShaders(vertPath, fragPath);
 
+    // Load text shaders
     rend->progText = loadShaders("Shaders/text/vert.glsl", "Shaders/text/frag.glsl");
 
+    // Configure fft
     struct pa_fft *ctx = calloc(1, sizeof(struct pa_fft));
     ctx->cont = 1;
     ctx->buffer_samples = 1024;
@@ -37,6 +42,7 @@ int main(int argc, char *argv[])
     ctx->win_type = WINDOW_HAMMING;
     ctx->fft_flags = FFTW_PATIENT | FFTW_DESTROY_INPUT;
 
+    // Init pulseaudio && fft
     init_pulse(ctx);
     init_buffers(ctx);
     init_fft(ctx);
@@ -49,6 +55,7 @@ int main(int argc, char *argv[])
 
     linkBuffers(rend);
 
+    // Create threads for pulseaudio & getting song info
     pthread_create(&ctx->thread, NULL, pa_fft_thread, ctx);
     pthread_create(&rend->songInfo.thread, NULL, updateSongInfo, &rend->songInfo);
 

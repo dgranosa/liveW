@@ -6,6 +6,7 @@ void printHelp()
     printf("Options:                                                                    \n");
     printf("   -h Print help                                                            \n");
     printf("   -d Turn debug on                                                         \n");
+    printf("   -k Plasma window setup                                                   \n");
     printf("   -w Window mode                                                           \n");
     printf("   -g Window geometry WIDTHxHEIGHT (default 800x600)                        \n");
     printf("   -o Position of window relative to top left corner TOPxLEFT (default 0x0)	\n");
@@ -22,6 +23,7 @@ bool parseArgs(int argc, char *argv[])
 {
     cfg.debug = false;
     cfg.src = NULL;
+    cfg.plasma = false;
     cfg.windowed = false;
     cfg.geometry = false;
     cfg.offX = 0;
@@ -35,7 +37,7 @@ bool parseArgs(int argc, char *argv[])
 	cfg.onlyYT = false;
 
     char c;
-    const char *opt_str = "hdwDYs:t:g:o:f:p:F:";
+    const char *opt_str = "hdkwDYs:t:g:o:f:p:F:";
     while ((c = getopt(argc, argv, opt_str)) != -1) {
         switch (c) {
             case 'h':
@@ -43,6 +45,10 @@ bool parseArgs(int argc, char *argv[])
                 break;
             case 'd':
                 cfg.debug = true;
+                break;
+            case 'k':
+                cfg.plasma = true,
+                cfg.windowed = true;
                 break;
             case 'w':
                 cfg.windowed = true;
