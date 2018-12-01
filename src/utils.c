@@ -46,7 +46,7 @@ int getSongInfo(char *artist, char *title)
 	char newArtist[128], newTitle[128];
 	buff[0] = newArtist[0] = newTitle[0] = '\0';
 
-	
+    // Get artist
 	if (exec("playerctl metadata artist", buff, sizeof(buff))) {
 		printf("Playerctl doesn't exist\n");
 		return -1;
@@ -55,6 +55,7 @@ int getSongInfo(char *artist, char *title)
 	if (strlen(buff))
 		strcpy(newArtist, buff);
 	
+    // Get title
 	if (exec("playerctl metadata title", buff, sizeof(buff))) {
 		printf("Playerctl doesn't exist\n");
 		return -1;
@@ -63,7 +64,7 @@ int getSongInfo(char *artist, char *title)
 	if (strlen(newArtist)) {
 		strcpy(artist, newArtist);
 		strcpy(title, buff);
-		return 0;
+		return 1;
 	}
 
 	if (!strlen(buff)) {
@@ -114,9 +115,21 @@ int getSongInfo(char *artist, char *title)
 
 void getAlbumArt(SongInfo *songInfo) {
 	char *cmd;
-	char buff[64];
+	char buff[128];
 
-	if (!cfg.onlyYT) {
+    if (!cfg.onlyYT) {
+        exec("playerctl metadata mpris:artUrl", buff, sizeof(buff));
+
+        if (strlen(buff)) {
+            cmd = (char *)malloc(strlen("curl -Ls --output image.jpg ") + strlen(buff));
+
+            sprintf(cmd, "curl -Ls --output image.jpg %s", buff);
+
+            
+		    songInfo->newAlbumArt = true;
+            return;
+        }
+
 		cmd = (char *)malloc(20 + strlen(songInfo->artist) + strlen(songInfo->title));
 
 		sprintf(cmd, "./albumArt \"%s %s\"", songInfo->artist, songInfo->title);
@@ -143,50 +156,31 @@ void getAlbumArt(SongInfo *songInfo) {
 
         char videoID[12];
 
-        if (cfg.plasma) {
-            if (exec("playerctl metadata xesam:url", buff, sizeof(buff)) || !strlen(buff)) {
-                if (cfg.debug)
-                    printf("No youtube video ID\n");
-                return;
-            }
-
-            int buffLenght = strlen(buff);
+        if (exec("playerctl metadata xesam:url", buff, sizeof(buff)) || !strlen(buff)) {
             if (cfg.debug)
-                printf("TrackID (%d): %s\n", buffLenght, buff);
+                printf("No youtube video ID\n");
+            return;
+        }
 
-            if (buffLenght < 17) {
-                if (cfg.debug)
-                    printf("No youtube video ID\n");
-                return;
-            }
+        int buffLenght = strlen(buff);
+        if (cfg.debug)
+            printf("TrackID (%d): %s\n", buffLenght, buff);
 
-            int start = buffLenght;
+        if (buffLenght < 17) {
+            if (cfg.debug)
+                printf("No youtube video ID\n");
+            return;
+        }
+
+        int start = buffLenght;
+
+        if (cfg.plasma) {
             while (buff[--start] != '?' || buff[start+1] != 'v');
             start += 2;
 
-            for (int i = start + 1, j = 0; i < buffLenght && j < 12; i++, j++) {
+            for (int i = start + 1, j = 0; i < buffLenght && j < 12; i++, j++)
                 videoID[j] = buff[i];
-            }
-
-            videoID[11] = '\0';
         } else {
-            if (exec("playerctl metadata mpris:trackid", buff, sizeof(buff)) || !strlen(buff)) {
-                if (cfg.debug)
-                    printf("No youtube video ID\n");
-                return;
-            }
-
-            int buffLenght = strlen(buff);
-            if (cfg.debug)
-                printf("TrackID (%d): %s\n", buffLenght, buff);
-
-            if (buffLenght < 17) {
-                if (cfg.debug)
-                    printf("No youtube video ID\n");
-                return;
-            }
-
-            int start = buffLenght;
             while (buff[--start] != '/');
 
             for (int i = start + 1, j = 0; i < buffLenght - 1 && j < 12; i++, j++) {
@@ -199,9 +193,9 @@ void getAlbumArt(SongInfo *songInfo) {
                     videoID[j] = buff[i];
                 }
             }
-
-            videoID[11] = '\0';
         }
+        
+        videoID[11] = '\0';
 
 		if (cfg.debug) 
 			printf("Video ID: %s\n", videoID);
