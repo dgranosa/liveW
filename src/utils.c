@@ -125,9 +125,10 @@ void getAlbumArt(SongInfo *songInfo) {
 
             sprintf(cmd, "curl -Ls --output image.jpg %s", buff);
 
-            
-		    songInfo->newAlbumArt = true;
-            return;
+            if (!exec(cmd, buff, sizeof(buff))) {
+		        songInfo->newAlbumArt = true;
+                return;
+            }
         }
 
 		cmd = (char *)malloc(20 + strlen(songInfo->artist) + strlen(songInfo->title));

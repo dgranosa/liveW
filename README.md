@@ -5,7 +5,7 @@ Support with displaying currently playing song.
 # Requirements:
  - Pulseaudio
  - FFTW
- - Freetype
+ - Freetype2
  - Compton (optional)
  - Playerctl (optional)
  
@@ -36,6 +36,7 @@ $ ./liveW -h
   Options:                                                                    
      -h Print help
      -d Turn debug on
+     -k Plasma window setup
      -w Window mode
      -g Geometry WIDTHxHEIGHT (default 800x600) 
      -o Starting point TOPxLEFT (default 0x0)
@@ -81,3 +82,7 @@ Second monitor: ```./liveW -g 2560x1440 -o 2560x0```
        - texture(fft, coordX).x;
      - otherwise
        - texture(samples, coordX).x;
+
+# Problems
+1. ft2build.h file is missing
+  ```$ sudo cp -r /usr/include/freetype2/ ..```
