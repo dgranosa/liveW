@@ -114,7 +114,7 @@ int getSongInfo(char *artist, char *title)
 }
 
 void getAlbumArt(SongInfo *songInfo) {
-	char *cmd;
+	char *cmd = NULL;
 	char buff[128];
 
     if (!cfg.onlyYT) {
@@ -142,76 +142,76 @@ void getAlbumArt(SongInfo *songInfo) {
 	
 		if (cfg.debug && strlen(buff))
 			printf("albumArt script output (%d): %s\n", (int)strlen(buff), buff);
-	}
 
-	if (!cfg.onlyYT && buff[0] != 'A') {
-
-		songInfo->newAlbumArt = true;
-		if (cfg.debug)
-			printf("Found album art using discorg\n");
-
-	} else {
-
-		if (cfg.debug)
-			printf("No album art found using youtube thumbnail\n");
-
-        char videoID[12];
-
-        if (exec("playerctl metadata xesam:url", buff, sizeof(buff)) || !strlen(buff)) {
+        if (buff[0] != 'A') {
+            songInfo->newAlbumArt = true;
             if (cfg.debug)
-                printf("No youtube video ID\n");
+                printf("Found album art using discorg\n");
+
             return;
         }
+    }
 
-        int buffLenght = strlen(buff);
+    if (cfg.debug)
+        printf("No album art found, using youtube thumbnail\n");
+
+    char videoID[12];
+
+    if (exec("playerctl metadata xesam:url", buff, sizeof(buff)) || !strlen(buff)) {
         if (cfg.debug)
-            printf("TrackID (%d): %s\n", buffLenght, buff);
+            printf("No youtube video ID\n");
+        return;
+    }
 
-        if (buffLenght < 17) {
-            if (cfg.debug)
-                printf("No youtube video ID\n");
-            return;
-        }
+    int buffLenght = strlen(buff);
+    if (cfg.debug)
+        printf("TrackID (%d): %s\n", buffLenght, buff);
 
-        int start = buffLenght;
+    if (buffLenght < 17) {
+        if (cfg.debug)
+            printf("No youtube video ID\n");
+        return;
+    }
 
-        if (cfg.plasma) {
-            while (buff[--start] != '?' || buff[start+1] != 'v');
-            start += 2;
+    int start = buffLenght;
 
-            for (int i = start + 1, j = 0; i < buffLenght && j < 12; i++, j++)
+    if (cfg.plasma) {
+        while (buff[--start] != '?' || buff[start+1] != 'v');
+        start += 2;
+
+        for (int i = start + 1, j = 0; i < buffLenght && j < 12; i++, j++)
+            videoID[j] = buff[i];
+    } else {
+        while (buff[--start] != '/');
+
+        for (int i = start + 1, j = 0; i < buffLenght - 1 && j < 12; i++, j++) {
+            if (buff[i] == '_') {
+                if (buff[++i] == 'd')
+                    videoID[j] = '-';
+                else if (buff[++i] == 'u')
+                    videoID[j] = '_';
+            } else {
                 videoID[j] = buff[i];
-        } else {
-            while (buff[--start] != '/');
-
-            for (int i = start + 1, j = 0; i < buffLenght - 1 && j < 12; i++, j++) {
-                if (buff[i] == '_') {
-                    if (buff[++i] == 'd')
-                        videoID[j] = '-';
-                    else if (buff[++i] == 'u')
-                        videoID[j] = '_';
-                } else {
-                    videoID[j] = buff[i];
-                }
             }
         }
-        
-        videoID[11] = '\0';
+    }
+    
+    videoID[11] = '\0';
 
-		if (cfg.debug) 
-			printf("Video ID: %s\n", videoID);
+    if (cfg.debug) 
+        printf("Video ID: %s\n", videoID);
 
-		free(cmd);
-		cmd = (char *)malloc(strlen("curl -o image.jpg -s https://i.ytimg.com/vi/zuJV-DAv_wE/hqdefault.jpg") + 1);
-		sprintf(cmd, "curl -o image.jpg -s https://i.ytimg.com/vi/%s/mqdefault.jpg", videoID);
+    free(cmd);
+    cmd = (char *)malloc(strlen("curl -o image.jpg -s https://i.ytimg.com/vi/zuJV-DAv_wE/hqdefault.jpg") + 1);
+    sprintf(cmd, "curl -o image.jpg -s https://i.ytimg.com/vi/%s/mqdefault.jpg", videoID);
 
-		if (exec(cmd, buff, sizeof(buff))) {
-			if (cfg.debug)
-				printf("Problem with downloding youtube thumbnail\n");
-		}
+    if (exec(cmd, buff, sizeof(buff))) {
+        if (cfg.debug)
+            printf("Problem with downloding youtube thumbnail\n");
+        return;
+    }
 
-		songInfo->newAlbumArt = true;
-	}
+    songInfo->newAlbumArt = true;
 
 	free(cmd);
 }

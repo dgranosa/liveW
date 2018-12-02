@@ -32,7 +32,7 @@ typedef struct pa_fft {
     int cont;
 
     pa_simple *s;
-    const char *dev;
+    char *dev;
     int error;
     pa_sample_spec ss;
     pa_channel_map map;
