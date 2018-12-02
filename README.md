@@ -2,7 +2,7 @@
 Live background wallpaper in opengl for i3(and Plasma). It's made for shaders from [Shadertoy.com](shadertoy.com).
 Support with displaying currently playing song.
 
-![Demo image](https://imgur.com/a/Bb8TlcX)
+![Demo image](https://user-images.githubusercontent.com/10576958/49334904-72f67000-f5e1-11e8-953b-391d96ee373a.jpg)
 
 # Requirements:
  - Pulseaudio
