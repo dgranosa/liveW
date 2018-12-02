@@ -333,9 +333,6 @@ void render(renderer *r, float *sampleBuff, float *fftBuff, int buffSize)
 		float textColor[] = {1.0, 1.0, 1.0};
 		renderText(r, r->songInfo.artist, 0.2188f, 0.4102f, 1.0f, textColor);
 		renderText(r, r->songInfo.title, 0.2188f, 0.3418f, 0.75f, textColor);
-	} else {
-		float textColor[] = {0.0, 0.0, 0.0};
-		renderText(r, time, -1.0f, 0.7813f, 1.5f, textColor);
 	}
 
 	checkErrors("Draw screen");

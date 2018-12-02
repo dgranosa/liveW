@@ -201,14 +201,93 @@ void *pa_fft_thread(void *arg) {
     return NULL;
 }
 
+static pa_mainloop* m_pulseaudio_mainloop;
+
+static void cb(__attribute__((unused)) pa_context* pulseaudio_context,
+               const pa_server_info* i,
+               void* userdata) {
+
+    /* Obtain default sink name */
+    pa_fft* pa_fft = (struct pa_fft*) userdata;
+    pa_fft->dev = malloc(sizeof(char) * 1024);
+
+    strcpy(pa_fft->dev, i->default_sink_name);
+
+    /* Append `.monitor` suffix */
+    pa_fft->dev = strcat(pa_fft->dev, ".monitor");
+
+    /* Quiting mainloop */
+    pa_context_disconnect(pulseaudio_context);
+    pa_context_unref(pulseaudio_context);
+    pa_mainloop_quit(m_pulseaudio_mainloop, 0);
+    pa_mainloop_free(m_pulseaudio_mainloop);
+}
+
+
+static void pulseaudio_context_state_callback(pa_context* pulseaudio_context, void* userdata) {
+    /* Ensure loop is ready */
+    switch (pa_context_get_state(pulseaudio_context)) {
+        case PA_CONTEXT_UNCONNECTED:  break;
+        case PA_CONTEXT_CONNECTING:   break;
+        case PA_CONTEXT_AUTHORIZING:  break;
+        case PA_CONTEXT_SETTING_NAME: break;
+        case PA_CONTEXT_READY: /* extract default sink name */
+            pa_operation_unref(pa_context_get_server_info(pulseaudio_context, cb, userdata));
+            break;
+        case PA_CONTEXT_FAILED:
+            printf("failed to connect to pulseaudio server\n");
+            exit(EXIT_FAILURE);
+            break;
+        case PA_CONTEXT_TERMINATED:
+            pa_mainloop_quit(m_pulseaudio_mainloop, 0);
+            break;
+    }
+}
+
+void get_pulse_default_sink(pa_fft* pa_fft) {
+    pa_mainloop_api* mainloop_api;
+    pa_context* pulseaudio_context;
+    int ret;
+
+    /* Create a mainloop API and connection to the default server */
+    m_pulseaudio_mainloop = pa_mainloop_new();
+
+    mainloop_api = pa_mainloop_get_api(m_pulseaudio_mainloop);
+    pulseaudio_context = pa_context_new(mainloop_api, "liveW device list");
+
+
+    /* Connect to the PA server */
+    pa_context_connect(pulseaudio_context, NULL, PA_CONTEXT_NOFLAGS,
+                   NULL);
+
+    /* Define a callback so the server will tell us its state */
+    pa_context_set_state_callback(pulseaudio_context,
+                              pulseaudio_context_state_callback,
+                              (void*)pa_fft);
+
+    /* Start mainloop to get default sink */
+
+    /* Start with one non blocking iteration in case pulseaudio is not able to run */
+    if (!(ret = pa_mainloop_iterate(m_pulseaudio_mainloop, 0, &ret))){
+    printf("Could not open pulseaudio mainloop to "
+           "find default device name: %d\n"
+           "check if pulseaudio is running\n",
+           ret);
+
+        exit(EXIT_FAILURE);
+    }
+
+    pa_mainloop_run(m_pulseaudio_mainloop, &ret);
+}
+
+
 static inline void init_pulse(pa_fft *pa_fft)
 {
+    if (!pa_fft->dev) {
+        get_pulse_default_sink(pa_fft);
+    }
     if (cfg.debug)
         printf("device = %s\n", pa_fft->dev);
-    if (!pa_fft->dev) {
-        printf("Warning: no device specified! It's highly possible "
-                        "Pulseaudio will attempt to use the microphone!\n");
-    }
 
     pa_fft->ss.format = PA_SAMPLE_FLOAT32LE;
     pa_fft->ss.rate = 44100;
