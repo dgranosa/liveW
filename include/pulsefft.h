@@ -169,10 +169,8 @@ void *pa_fft_thread(void *arg) {
     weights_init(weights, t->fft_memb, t->win_type);
 
     while (t->cont) {
-        if (pa_simple_read(t->s, &t->pa_buf[0],
-            t->pa_buf_size, &t->error) < 0) {
-            printf("ERROR: pa_simple_read() failed: %s\n",
-                    pa_strerror(t->error));
+        if (pa_simple_read(t->s, t->pa_buf, t->pa_buf_size, &t->error) < 0) {
+            printf("ERROR: pa_simple_read() failed: %s\n", pa_strerror(t->error));
             t->cont = 0;
             continue;
         }
@@ -215,10 +213,15 @@ static inline void init_pulse(pa_fft *pa_fft)
     pa_fft->ss.format = PA_SAMPLE_FLOAT32LE;
     pa_fft->ss.rate = 44100;
     pa_fft->ss.channels = 1;
-    pa_channel_map_init_mono(&pa_fft->map);
 
-    if (!(pa_fft->s = pa_simple_new(NULL, "pa_fft", PA_STREAM_RECORD, pa_fft->dev,
-                                    "record", &pa_fft->ss, &pa_fft->map, NULL,
+    const pa_buffer_attr pb = {
+        .maxlength = (uint32_t) -1,
+        .fragsize = 1024
+    };
+
+    if (!(pa_fft->s = pa_simple_new(NULL, "liveW", PA_STREAM_RECORD,
+                                    pa_fft->dev, "liveW audio source",
+                                    &pa_fft->ss, NULL, &pb,
                                     &pa_fft->error))) {
         printf("ERROR: pa_simple_new() failed: %s\n",
                 pa_strerror(pa_fft->error));
