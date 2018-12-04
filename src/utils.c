@@ -176,8 +176,11 @@ void getAlbumArt(SongInfo *songInfo) {
     int start = buffLenght;
 
     if (cfg.plasma) {
-        while (buff[--start] != '?' || buff[start+1] != 'v');
+        while (--start || buff[start] != '?' || buff[start+1] != 'v');
         start += 2;
+
+        if (!start)
+            return;
 
         for (int i = start + 1, j = 0; i < buffLenght && j < 12; i++, j++)
             videoID[j] = buff[i];
