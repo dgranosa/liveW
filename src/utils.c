@@ -176,11 +176,11 @@ void getAlbumArt(SongInfo *songInfo) {
     int start = buffLenght;
 
     if (cfg.plasma) {
-        while (--start || buff[start] != '?' || buff[start+1] != 'v');
-        start += 2;
+        while (--start && ((buff[start] != '?' && buff[start] != '&') || buff[start+1] != 'v' || buff[start+2] != '='));
 
         if (!start)
             return;
+        start += 2;
 
         for (int i = start + 1, j = 0; i < buffLenght && j < 12; i++, j++)
             videoID[j] = buff[i];
@@ -205,8 +205,8 @@ void getAlbumArt(SongInfo *songInfo) {
         printf("Video ID: %s\n", videoID);
 
     free(cmd);
-    cmd = (char *)malloc(strlen("curl -o image.jpg -s https://i.ytimg.com/vi/zuJV-DAv_wE/hqdefault.jpg") + 1);
-    sprintf(cmd, "curl -o image.jpg -s https://i.ytimg.com/vi/%s/mqdefault.jpg", videoID);
+    cmd = (char *)malloc(strlen("curl -o image.jpg -s https://i.ytimg.com/vi/zuJV-DAv_wE/maxresdefault.jpg") + 1);
+    sprintf(cmd, "curl -o image.jpg -s https://i.ytimg.com/vi/%s/maxresdefault.jpg", videoID);
 
     if (exec(cmd, buff, sizeof(buff))) {
         if (cfg.debug)
