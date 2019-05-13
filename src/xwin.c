@@ -103,10 +103,9 @@ void initWindow(xwin *win)
 	unsigned long mask = CWBackPixel | CWBorderPixel | CWColormap | CWEventMask;
 
 	if (cfg.debug)
-        	printf("Window depth %d, %dx%d\n", win->vi->depth, win->width, win->height);
+        printf("Window depth %d, %dx%d\n", win->vi->depth, win->width, win->height);
 
-	win->window = XCreateWindow(win->display, win->root, win->offX, win->offY, win->width, win->height, 0,
-			win->vi->depth, InputOutput, win->vi->visual, mask, &win->swa);
+	win->window = XCreateWindow(win->display, win->root, win->offX, win->offY, win->width, win->height, 0, win->vi->depth, InputOutput, win->vi->visual, mask, &win->swa);
 }
 
 static Window find_subwindow(xwin *r, Window win, int w, int h)

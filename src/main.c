@@ -35,12 +35,8 @@ int main(int argc, char *argv[])
     // Configure fft
     struct pa_fft *ctx = calloc(1, sizeof(struct pa_fft));
     ctx->cont = 1;
-    ctx->buffer_samples = 1024;
+    ctx->samples = 4096;
     ctx->dev = cfg.src;
-    ctx->frame_avg = 2;
-    ctx->start_low = 1;
-    ctx->win_type = WINDOW_HAMMING;
-    ctx->fft_flags = FFTW_PATIENT | FFTW_DESTROY_INPUT;
 
     // Init pulseaudio && fft
     init_pulse(ctx);
@@ -60,7 +56,7 @@ int main(int argc, char *argv[])
     pthread_create(&rend->songInfo.thread, NULL, updateSongInfo, &rend->songInfo);
 
     while(ctx->cont) {
-        render(rend, ctx->pa_buf, ctx->fftBuff, ctx->buffer_samples);
+        render(rend, ctx->pa_buff, ctx->fft_buff, ctx->samples);
 
 		usleep(1000000 / cfg.fps);
     }

@@ -281,7 +281,7 @@ void render(renderer *r, float *sampleBuff, float *fftBuff, int buffSize)
 
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_1D, r->audioFFT);
-    glTexImage1D(GL_TEXTURE_1D, 0, GL_R16, buffSize/2, 0, GL_RED, GL_FLOAT, fftBuff);
+    glTexImage1D(GL_TEXTURE_1D, 0, GL_R16, buffSize/2+1, 0, GL_RED, GL_FLOAT, fftBuff);
 
     // Load album art if toggled
 	if (r->songInfo.newAlbumArt) {
