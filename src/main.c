@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
     pthread_create(&rend->songInfo.thread, NULL, updateSongInfo, &rend->songInfo);
 
     while(ctx->cont) {
-        render(rend, ctx->pa_buff, ctx->fft_buff, ctx->samples);
+        render(rend, ctx->pa_output, ctx->fft_output, ctx->samples);
 
 		usleep(1000000 / cfg.fps);
     }
