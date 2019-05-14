@@ -29,6 +29,11 @@
 // TODO: Add this vars to config
 const int smoothing_prec = 1024;
 float smooth[] = {1.0, 1.0, 1.0, 1.0, 1.0};
+int height = 300 - 1;
+float g = 1.0;
+int highf = 20000, lowf = 20;
+float logScale = 1.0;
+double sensitivity = 1.0;
 
 typedef struct pa_fft {
     pthread_t thread;
@@ -37,6 +42,7 @@ typedef struct pa_fft {
     // Pulseaudio
     pa_simple *s;
     char *dev;
+    unsigned int rate;
     int error;
     pa_sample_spec ss;
     pa_channel_map map;
@@ -62,7 +68,7 @@ typedef struct pa_fft {
 
 void deinit_fft(pa_fft *pa_fft);
 
-void separate_freq_bands(float *out, fftw_complex *in, int n, int *lcf, int *hcf, float *k, double sensitivity, int in_samples)
+void separate_freq_bands(double *out, fftw_complex *in, int n, int *lcf, int *hcf, float *k, double sensitivity, int in_samples)
 {
     double peak[n];
     double y[in_samples];
@@ -76,10 +82,13 @@ void separate_freq_bands(float *out, fftw_complex *in, int n, int *lcf, int *hcf
             peak[i] += y[j];
         }
 
+
         peak[i] = peak[i] / (hcf[i] - lcf[i] + 1);
-        temp = peak[i] * sensitivity * k[i] / 1.0;
-        out[i] = temp;
+        temp = peak[i] * sensitivity * k[i] / 100000;
+        printf("%d: %lf %lf %f -> %lf\n", i, peak[i], sensitivity, k[i], temp);
+        out[i] = temp / height;
     }
+    printf("\n");
 }
 
 int16_t audio_out[65536];
@@ -90,32 +99,34 @@ void *pa_fft_thread(void *arg)
 
     // Smoothing calculations
     float smoothing[smoothing_prec];
-    float gravity = 1.0 * pow((60 / (float)cfg.fps), 2.5);
-    double freqconst = log(20000 - 20) / log(pow(smoothing_prec, 1));
+    float gravity = g * ((float)height / 2160) * pow((60 / (float)cfg.fps), 2.5);
+    double freqconst = log(highf - lowf) / log(pow(smoothing_prec, logScale));
+    printf("%lf\n", freqconst);
 
-    float fc[smoothing_prec];
-    int lcf[smoothing_prec], hcf[smoothing_prec]; // Freq range for each bar
+    float fc[smoothing_prec], x;
+    int lcf[smoothing_prec], hcf[smoothing_prec];
+
     for (int i = 0; i < smoothing_prec; i++) {
-        fc[i] = pow(powf(i, (1.0 - 1.0) * ((double)i + 1.0) / ((double)smoothing_prec) + 1.0), freqconst) + 20;
-        lcf[i] = fc[i] / 22050 * (4096 / 2) + 1;
+        fc[i] = pow(powf(i, (logScale - 1.0) * ((double)i + 1.0) / ((double)smoothing_prec) + 1.0), freqconst) + lowf;
+        x = fc[i] / (t->rate / 2);
+        lcf[i] = x * (t->samples / 2);
         if (i != 0)
             hcf[i-1] = lcf[i] - 1;
-        printf("%d: %f %d\n", i, fc[i], lcf[i]);
     }
-    hcf[smoothing_prec-1] = 20000 * 4096 / 44100;
-    printf("%d\n", hcf[smoothing_prec-1]);
+    hcf[smoothing_prec-1] = highf * t->samples / t->rate;
 
     for (int i = 0; i < smoothing_prec; i++) {
         smoothing[i] = pow(fc[i], 0.64);
+        smoothing[i] *= (float)height / 100;
         smoothing[i] *= smooth[(int)(i / smoothing_prec * sizeof(smooth) / sizeof(*smooth))];
     }
 
-    int16_t buf[4096 / 2];
+    int16_t buf[t->samples / 2];
     
     int n = 0;
 
-    for (int i = 0; i < 4096; i++) {
-        if (i < 4096 / 2)
+    for (int i = 0; i < t->samples; i++) {
+        if (i < t->samples / 2)
             buf[i] = 0;
         audio_out[i] = 0;
         t->pa_buff[i] = 0;
@@ -128,14 +139,14 @@ void *pa_fft_thread(void *arg)
             continue;
         }
 
-        for (int i = 0; i < 4096 / 2; i += 2) {
+        for (int i = 0; i < t->samples / 2; i += 2) {
             audio_out[n] = (buf[i] + buf[i+1]) / 2;
             n++;
-            if (n == 4096 - 1) n = 0;
+            if (n == t->samples - 1) n = 0;
         }
 
-        for (int i = 0; i < 4096; i++) {
-            if (i < 4096) {
+        for (int i = 0; i < t->samples + 2; i++) {
+            if (i < t->samples) {
                 t->pa_buff[i] = audio_out[i];
             } else {
                 t->pa_buff[i] = 0;
@@ -143,18 +154,18 @@ void *pa_fft_thread(void *arg)
         }
 
         fftw_execute(t->plan);
-/*
-        for (int i = 0; i < t->output_samples; i+=100) {
-            printf("%d -> ", i * 22050 / t->output_samples);
-            printf("(%f, %f)\t", creal(t->output[i]), cimag(t->output[i]));
-            printf("%f\n", sqrt(creal(t->output[i]) * creal(t->output[i]) + cimag(t->output[i]) * cimag(t->output[i])));
-        }
-        printf("\n");*/
 
-        //sleep(1);
+        separate_freq_bands(t->fft_buff, t->output, smoothing_prec, lcf, hcf, smoothing, 0.049664, t->output_samples);
 
-        separate_freq_bands(t->fft_buff, t->output, smoothing_prec, lcf, hcf, smoothing, 1.0, t->output_samples);
-        for (int i = 0; i < 10; i++) printf("%lf ", t->fft_buff[i]); printf("\n\n");
+        /*for (int i = 0; i < smoothing_prec; i++) {
+            if (t->pa_buff[i] > height) {
+                sensitivity *= 0.985;
+                break;
+            }
+            if (i == smoothing_prec - 1) sensitivity *= 1.002;
+        }*/
+
+        for (int i = 1; i < 10; i++) printf("%lf ", t->fft_buff[i]); printf("\n");
     }
 
     deinit_fft(t);
@@ -249,7 +260,7 @@ void init_pulse(pa_fft *pa_fft)
         printf("device = %s\n", pa_fft->dev);
 
     pa_fft->ss.format = PA_SAMPLE_S16LE;
-    pa_fft->ss.rate = 44100;
+    pa_fft->ss.rate = pa_fft->rate;
     pa_fft->ss.channels = 2;
 
     const pa_buffer_attr pb = {
@@ -274,7 +285,7 @@ void init_buffers(pa_fft *pa_fft)
         return;
 
     // Pulse buffer
-    pa_fft->pa_samples = pa_fft->samples;
+    pa_fft->pa_samples = pa_fft->samples + 2;
     pa_fft->pa_buff_size = sizeof(double) * pa_fft->pa_samples;
     pa_fft->pa_buff = malloc(pa_fft->pa_buff_size);
 
@@ -284,7 +295,7 @@ void init_buffers(pa_fft *pa_fft)
     pa_fft->output = fftw_malloc(pa_fft->output_size);
 
     // Output buffer
-    pa_fft->fft_samples = pa_fft->samples;
+    pa_fft->fft_samples = pa_fft->samples + 2;
     pa_fft->fft_buff_size = sizeof(double) * pa_fft->fft_samples;
     pa_fft->fft_buff = malloc(pa_fft->fft_buff_size);
 }

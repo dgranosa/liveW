@@ -37,6 +37,7 @@ int main(int argc, char *argv[])
     ctx->cont = 1;
     ctx->samples = 4096;
     ctx->dev = cfg.src;
+    ctx->rate = 44100;
 
     // Init pulseaudio && fft
     init_pulse(ctx);
