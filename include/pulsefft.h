@@ -20,7 +20,6 @@
 // TODO: Add this vars to config
 const int smoothing_prec = 100;
 float smooth[] = {1.0, 1.0, 1.0, 1.0, 1.0};
-int height = 600 - 1;
 float gravity = 0.0006;
 int highf = 20000, lowf = 20;
 float logScale = 1.0;
@@ -82,7 +81,7 @@ void separate_freq_bands(double *out, fftw_complex *in, int n, int *lcf, int *hc
 
         peak[i] = peak[i] / (hcf[i] - lcf[i] + 1);
         temp = peak[i] * sensitivity * k[i] / 100000;
-        out[i] = temp / height;
+        out[i] = temp / 100.0;
     }
 }
 
@@ -113,7 +112,6 @@ void *pa_fft_thread(void *arg)
 
     for (int i = 0; i < smoothing_prec; i++) {
         smoothing[i] = pow(fc[i], 0.64); // TODO: Add smoothing factor to config
-        smoothing[i] *= (float)height / 100;
         smoothing[i] *= smooth[(int)(i / smoothing_prec * sizeof(smooth) / sizeof(*smooth))];
     }
 
@@ -183,15 +181,15 @@ void *pa_fft_thread(void *arg)
 
         // Integral
         for (int i = 0; i < smoothing_prec; i++) {
-            t->fft_buff[i] = (int)(t->fft_buff[i] * height);
+            t->fft_buff[i] = (int)(t->fft_buff[i] * 100);
             t->fft_buff[i] += fmem[i] * 0.9; // TODO: Add integral to config
             fmem[i] = t->fft_buff[i];
 
-            int diff = (height + 1) - t->fft_buff[i];
+            int diff = 100 - t->fft_buff[i];
             if (diff < 0) diff = 0;
             double div = 1 / (diff + 1);
             fmem[i] *= 1 - div / 20;
-            t->fft_buff[i] /= height;
+            t->fft_buff[i] /= 100.0;
         }
 
         // Auto sensitivity
