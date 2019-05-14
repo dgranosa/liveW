@@ -29,7 +29,7 @@
 // TODO: Add this vars to config
 const int smoothing_prec = 64;
 float smooth[] = {1.0, 1.0, 1.0, 1.0, 1.0};
-int height = 300 - 1;
+int height = 600 - 1;
 float gravity = 0.0006;
 int highf = 20000, lowf = 20;
 float logScale = 1.0;
@@ -164,7 +164,6 @@ void *pa_fft_thread(void *arg)
 
         separate_freq_bands(t->fft_buff, t->output, smoothing_prec, lcf, hcf, smoothing, sensitivity, t->output_samples);
 
-        printf("%f\n", gravity);
         // Gravity
         for (int i = 0; i < smoothing_prec; i++) {
             if (t->fft_buff[i] < flast[i]) {
@@ -176,6 +175,19 @@ void *pa_fft_thread(void *arg)
             }
 
             flast[i] = t->fft_buff[i];
+        }
+
+        // Integral
+        for (int i = 0; i < smoothing_prec; i++) {
+            t->fft_buff[i] = (int)(t->fft_buff[i] * height);
+            t->fft_buff[i] += fmem[i] * 0.9; // TODO: Add integral config
+            fmem[i] = t->fft_buff[i];
+
+            int diff = (height + 1) - t->fft_buff[i];
+            if (diff < 0) diff = 0;
+            double div = 1 / (diff + 1);
+            fmem[i] *= 1 - div / 20;
+            t->fft_buff[i] /= height;
         }
 
         // Auto sensitiviy
