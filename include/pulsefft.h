@@ -17,17 +17,8 @@
 
 #include <fftw3.h>
 
-/* TODO: Params to add to config file
- * buffer_samples
- * gravity          57
- * freqScale        58, 65, 73
- * logScale         58, 65
- * smootingFact     73
- * audioRate        70, 74
- */
-
 // TODO: Add this vars to config
-const int smoothing_prec = 64;
+const int smoothing_prec = 100;
 float smooth[] = {1.0, 1.0, 1.0, 1.0, 1.0};
 int height = 600 - 1;
 float gravity = 0.0006;
@@ -121,7 +112,7 @@ void *pa_fft_thread(void *arg)
     hcf[smoothing_prec-1] = highf * t->samples / t->rate;
 
     for (int i = 0; i < smoothing_prec; i++) {
-        smoothing[i] = pow(fc[i], 0.64);
+        smoothing[i] = pow(fc[i], 0.64); // TODO: Add smoothing factor to config
         smoothing[i] *= (float)height / 100;
         smoothing[i] *= smooth[(int)(i / smoothing_prec * sizeof(smooth) / sizeof(*smooth))];
     }
@@ -164,6 +155,19 @@ void *pa_fft_thread(void *arg)
 
         separate_freq_bands(t->fft_buff, t->output, smoothing_prec, lcf, hcf, smoothing, sensitivity, t->output_samples);
 
+        float xxx = 1000.0f;
+        // Waves
+        for (int i = 0; i < smoothing_prec; i++) {
+            t->fft_buff[i] *= 0.8;
+            for (int j = i-1; j >= 0; j--) {
+                if (t->fft_buff[i] - pow(i - j, 2) / xxx > t->fft_buff[j])
+                    t->fft_buff[j] = t->fft_buff[i] - pow(i - j, 2) / xxx;
+            }
+            for (int j = i+1; j < smoothing_prec; j++)
+                if (t->fft_buff[i] - pow(i - j, 2) / xxx > t->fft_buff[j])
+                    t->fft_buff[j] = t->fft_buff[i] - pow(i - j, 2) / xxx;
+        }
+
         // Gravity
         for (int i = 0; i < smoothing_prec; i++) {
             if (t->fft_buff[i] < flast[i]) {
@@ -180,7 +184,7 @@ void *pa_fft_thread(void *arg)
         // Integral
         for (int i = 0; i < smoothing_prec; i++) {
             t->fft_buff[i] = (int)(t->fft_buff[i] * height);
-            t->fft_buff[i] += fmem[i] * 0.9; // TODO: Add integral config
+            t->fft_buff[i] += fmem[i] * 0.9; // TODO: Add integral to config
             fmem[i] = t->fft_buff[i];
 
             int diff = (height + 1) - t->fft_buff[i];

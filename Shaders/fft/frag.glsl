@@ -1,7 +1,7 @@
 #version 430
 
-#define NB_BARS		64
-#define NB_SAMPLES	8
+#define NB_BARS		128
+#define NB_SAMPLES	1
 #define SPACE		0.15
 #define SIDE_SPACE  0.0
 
@@ -38,11 +38,7 @@ void main() {
     float f = 0.;
     f = 0.;
     
-    for(int t=0; t<NB_SAMPLES; t++)
-    {
-    	f += texelFetch(fft, bar*NB_SAMPLES+t, 0).r;
-    }
-    f /= float(NB_SAMPLES);
+    f = texelFetch(fft, bar, 0).r;
     
 //    f *= 0.85;
 //    f += 0.02;

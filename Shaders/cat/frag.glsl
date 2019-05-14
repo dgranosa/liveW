@@ -1,6 +1,6 @@
 #version 430
 
-#define NB_BARS         64
+#define NB_BARS         100
 #define NB_SAMPLES      1
 #define SPACE           0.05
 #define SIDE_SPACE      0.10
