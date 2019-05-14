@@ -80,7 +80,7 @@ void separate_freq_bands(double *out, fftw_complex *in, int n, int *lcf, int *hc
 
 
         peak[i] = peak[i] / (hcf[i] - lcf[i] + 1);
-        temp = peak[i] * sensitivity * k[i] / 100000;
+        temp = peak[i] * sensitivity * k[i] / 1000000;
         out[i] = temp / 100.0;
     }
 }
@@ -192,13 +192,14 @@ void *pa_fft_thread(void *arg)
             t->fft_buff[i] /= 100.0;
         }
 
+        printf("%f\n", sensitivity);
         // Auto sensitivity
         for (int i = 0; i < smoothing_prec; i++) {
             if (t->fft_buff[i] > 1.0) {
                 sensitivity *= 0.985;
                 break;
             }
-            if (i == smoothing_prec - 1 && sensitivity < 5.0) sensitivity *= 1.002;
+            if (i == smoothing_prec - 1 && sensitivity < 1.0) sensitivity *= 1.002;
         }
         if (sensitivity < 0.0001) sensitivity = 0.0001;
 
