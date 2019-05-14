@@ -1,7 +1,7 @@
 #version 430
 
 #define NB_BARS         64
-#define NB_SAMPLES      16
+#define NB_SAMPLES      1
 #define SPACE           0.05
 #define SIDE_SPACE      0.10
 #define HEIGHT          0.50
@@ -59,7 +59,7 @@ void main() {
     }
     f /= float(NB_SAMPLES);
     
-    f *= 0.8;
+    f *= 0.3;
 	//f -= 0.0;
 
 	if (f <= 0.001)

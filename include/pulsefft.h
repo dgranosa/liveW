@@ -27,10 +27,10 @@
  */
 
 // TODO: Add this vars to config
-const int smoothing_prec = 1024;
+const int smoothing_prec = 64;
 float smooth[] = {1.0, 1.0, 1.0, 1.0, 1.0};
 int height = 300 - 1;
-float g = 1.0;
+float gravity = 0.0006;
 int highf = 20000, lowf = 20;
 float logScale = 1.0;
 double sensitivity = 1.0;
@@ -103,8 +103,10 @@ void *pa_fft_thread(void *arg)
 
     // Smoothing calculations
     float smoothing[smoothing_prec];
-    float gravity = g * ((float)height / 2160) * pow((60 / (float)cfg.fps), 2.5);
     double freqconst = log(highf - lowf) / log(pow(smoothing_prec, logScale));
+
+    int fall[smoothing_prec];
+    float fpeak[smoothing_prec], flast[smoothing_prec], fmem[smoothing_prec];
 
     float fc[smoothing_prec], x;
     int lcf[smoothing_prec], hcf[smoothing_prec];
@@ -129,8 +131,8 @@ void *pa_fft_thread(void *arg)
     int n = 0;
 
     for (int i = 0; i < t->samples; i++) {
-        if (i < t->samples / 2)
-            buf[i] = 0;
+        if (i < smoothing_prec)
+            buf[i] = fall[i] = fpeak[i] = flast[i] = fmem[i] = 0;
         audio_out[i] = 0;
         t->pa_buff[i] = 0;
     }
@@ -162,16 +164,28 @@ void *pa_fft_thread(void *arg)
 
         separate_freq_bands(t->fft_buff, t->output, smoothing_prec, lcf, hcf, smoothing, sensitivity, t->output_samples);
 
+        printf("%f\n", gravity);
+        // Gravity
+        for (int i = 0; i < smoothing_prec; i++) {
+            if (t->fft_buff[i] < flast[i]) {
+                t->fft_buff[i] = fpeak[i] - (gravity * fall[i] * fall[i]);
+                fall[i]++;
+            } else {
+                fpeak[i] = t->fft_buff[i];
+                fall[i] = 0;
+            }
+
+            flast[i] = t->fft_buff[i];
+        }
+
+        // Auto sensitiviy
         for (int i = 0; i < smoothing_prec; i++) {
             if (t->fft_buff[i] > 1.0) {
-                printf("%lf ", t->fft_buff[i]);
                 sensitivity *= 0.985;
                 break;
             }
             if (i == smoothing_prec - 1) sensitivity *= 1.002;
         }
-
-        printf("%f\n", sensitivity);
 
         for (int i = 0; i < smoothing_prec; i++)
             t->fft_output[i] = t->fft_buff[i];
