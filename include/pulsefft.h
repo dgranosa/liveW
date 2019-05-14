@@ -190,14 +190,15 @@ void *pa_fft_thread(void *arg)
             t->fft_buff[i] /= height;
         }
 
-        // Auto sensitiviy
+        // Auto sensitivity
         for (int i = 0; i < smoothing_prec; i++) {
             if (t->fft_buff[i] > 1.0) {
                 sensitivity *= 0.985;
                 break;
             }
-            if (i == smoothing_prec - 1) sensitivity *= 1.002;
+            if (i == smoothing_prec - 1 && sensitivity < 5.0) sensitivity *= 1.002;
         }
+        if (sensitivity < 0.0001) sensitivity = 0.0001;
 
         for (int i = 0; i < smoothing_prec; i++)
             t->fft_output[i] = t->fft_buff[i];
