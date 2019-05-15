@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
     // Configure fft
     struct pa_fft *ctx = calloc(1, sizeof(struct pa_fft));
     ctx->cont = 1;
-    ctx->samples = 4096;
+    ctx->samples = 2048;
     ctx->dev = cfg.src;
     ctx->rate = 44100;
 

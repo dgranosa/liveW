@@ -21,7 +21,7 @@
 const int smoothing_prec = 100;
 float smooth[] = {1.0, 1.0, 1.0, 1.0, 1.0};
 float gravity = 0.0006;
-int highf = 20000, lowf = 20;
+int highf = 18000, lowf = 20;
 float logScale = 1.0;
 double sensitivity = 1.0;
 
@@ -91,7 +91,6 @@ void *pa_fft_thread(void *arg)
 {
     pa_fft *t = (struct pa_fft *)arg;
 
-    // Smoothing calculations
     float smoothing[smoothing_prec];
     double freqconst = log(highf - lowf) / log(pow(smoothing_prec, logScale));
 
@@ -101,6 +100,7 @@ void *pa_fft_thread(void *arg)
     float fc[smoothing_prec], x;
     int lcf[smoothing_prec], hcf[smoothing_prec];
 
+    // Calc freq range for each bar
     for (int i = 0; i < smoothing_prec; i++) {
         fc[i] = pow(powf(i, (logScale - 1.0) * ((double)i + 1.0) / ((double)smoothing_prec) + 1.0), freqconst) + lowf;
         x = fc[i] / (t->rate / 2);
@@ -110,35 +110,35 @@ void *pa_fft_thread(void *arg)
     }
     hcf[smoothing_prec-1] = highf * t->samples / t->rate;
 
+    // Calc smoothing
     for (int i = 0; i < smoothing_prec; i++) {
         smoothing[i] = pow(fc[i], 0.64); // TODO: Add smoothing factor to config
         smoothing[i] *= smooth[(int)(i / smoothing_prec * sizeof(smooth) / sizeof(*smooth))];
     }
 
-    int16_t buf[t->samples / 2];
-    
     int n = 0;
+    int16_t buf[t->samples];
 
-    for (int i = 0; i < t->samples; i++) {
-        if (i < smoothing_prec)
-            buf[i] = fall[i] = fpeak[i] = flast[i] = fmem[i] = 0;
-        audio_out[i] = 0;
-        t->pa_buff[i] = 0;
-    }
+    // Clear arrays
+    for (int i = 0; i < smoothing_prec; i++)
+        buf[i] = fall[i] = fpeak[i] = flast[i] = fmem[i] = 0;
 
     while (t->cont) {
-        if (pa_simple_read(t->s, buf, sizeof(buf), &t->error) < 0) {
+        // Read from pulseaudio buffer
+        if (pa_simple_read(t->s, buf, sizeof(buf) / 2, &t->error) < 0) {
             printf("ERROR: pa_simple_read() failed: %s\n", pa_strerror(t->error));
             t->cont = 0;
             continue;
         }
 
+        // Spliting channels
         for (int i = 0; i < t->samples / 2; i += 2) {
-            audio_out[n] = (buf[i] + buf[i+1]) / 2;
+            audio_out[n] = (buf[i] + buf[i+1]) / 2; // TODO: Add stereo option
             n++;
             if (n == t->samples - 1) n = 0;
         }
 
+        // Copying buffer
         for (int i = 0; i < t->samples + 2; i++) {
             if (i < t->samples) {
                 t->pa_buff[i] = audio_out[i];
@@ -149,21 +149,23 @@ void *pa_fft_thread(void *arg)
             }
         }
 
+        // Run fftw
         fftw_execute(t->plan);
 
+        // Separate fftw output
         separate_freq_bands(t->fft_buff, t->output, smoothing_prec, lcf, hcf, smoothing, sensitivity, t->output_samples);
 
-        float xxx = 1000.0f;
+        /* Processing */
         // Waves
         for (int i = 0; i < smoothing_prec; i++) {
             t->fft_buff[i] *= 0.8;
             for (int j = i-1; j >= 0; j--) {
-                if (t->fft_buff[i] - pow(i - j, 2) / xxx > t->fft_buff[j])
-                    t->fft_buff[j] = t->fft_buff[i] - pow(i - j, 2) / xxx;
+                if (t->fft_buff[i] - (i - j) * (i - j) / 1000.0 > t->fft_buff[j])
+                    t->fft_buff[j] = t->fft_buff[i] - (i - j) * (i - j) / 1000.0;
             }
             for (int j = i+1; j < smoothing_prec; j++)
-                if (t->fft_buff[i] - pow(i - j, 2) / xxx > t->fft_buff[j])
-                    t->fft_buff[j] = t->fft_buff[i] - pow(i - j, 2) / xxx;
+                if (t->fft_buff[i] - (i - j) * (i - j) / 1000.0 > t->fft_buff[j])
+                    t->fft_buff[j] = t->fft_buff[i] - (i - j) * (i - j) / 1000.0;
         }
 
         // Gravity
@@ -192,10 +194,9 @@ void *pa_fft_thread(void *arg)
             t->fft_buff[i] /= 100.0;
         }
 
-        printf("%f\n", sensitivity);
         // Auto sensitivity
         for (int i = 0; i < smoothing_prec; i++) {
-            if (t->fft_buff[i] > 1.0) {
+            if (t->fft_buff[i] > 0.95) {
                 sensitivity *= 0.985;
                 break;
             }
