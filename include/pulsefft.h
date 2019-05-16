@@ -208,8 +208,6 @@ void *pa_fft_thread(void *arg)
             t->fft_output[i] = t->fft_buff[i];
     }
 
-    deinit_fft(t);
-
     return NULL;
 }
 
@@ -362,18 +360,9 @@ void deinit_fft(pa_fft *pa_fft)
     if (!pa_fft)
         return;
 
-    if (pa_fft->cont != 2) {
-        pa_fft->cont = 0;
-        sleep(1);
-    }
-
     fftw_destroy_plan(pa_fft->plan);
-    fftw_free(pa_fft->output);
-
-    if (pa_fft->cont != 2)
-        pa_simple_free(pa_fft->s);
+    pa_simple_free(pa_fft->s);
     free(pa_fft->pa_buff);
-    free(pa_fft->fft_buff);
 
     pthread_join(pa_fft->thread, NULL);
 

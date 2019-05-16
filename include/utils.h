@@ -19,6 +19,8 @@ typedef struct SongInfo {
 	bool newAlbumArt;
 	int width, height, nrChannels;
 	unsigned char *albumArt;
+
+    int *cont;
 } SongInfo;
 
 float getUnixTime();

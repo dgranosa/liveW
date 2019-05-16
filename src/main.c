@@ -8,8 +8,20 @@
 #include "renderer.h"
 #include "pulsefft.h"
 
+static struct pa_fft *ctx;
+
+void sig_handler(int sig_no) {
+    if (sig_no == SIGINT)
+        ctx->cont = 0;
+}
+
 int main(int argc, char *argv[])
 {
+    // Handle Ctrl+C
+    struct sigaction action;
+    action.sa_handler = &sig_handler;
+    sigaction(SIGINT, &action, NULL);
+
     // Parse arguments
     if (!parseArgs(argc, argv)) {
         printHelp();
@@ -33,22 +45,17 @@ int main(int argc, char *argv[])
     rend->progText = loadShaders("Shaders/text/vert.glsl", "Shaders/text/frag.glsl");
 
     // Configure fft
-    struct pa_fft *ctx = calloc(1, sizeof(struct pa_fft));
+    ctx = calloc(1, sizeof(struct pa_fft));
     ctx->cont = 1;
     ctx->samples = 2048;
     ctx->dev = cfg.src;
     ctx->rate = 44100;
+    rend->songInfo.cont = &ctx->cont;
 
     // Init pulseaudio && fft
     init_pulse(ctx);
     init_buffers(ctx);
     init_fft(ctx);
-
-    if (!ctx->cont) {
-        ctx->cont = 2;
-        deinit_fft(ctx);
-        return 1;
-    }
 
     linkBuffers(rend);
 
@@ -61,6 +68,9 @@ int main(int argc, char *argv[])
 
 		usleep(1000000 / cfg.fps);
     }
+
+	usleep(1000000 / cfg.fps);
+    deinit_fft(ctx);
 
     return 0;
 }

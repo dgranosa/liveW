@@ -221,10 +221,9 @@ void getAlbumArt(SongInfo *songInfo) {
 
 void *updateSongInfo(void *arg)
 {
-	while (true) {
-		SongInfo *songInfo = (struct SongInfo *)arg;
+	SongInfo *songInfo = (struct SongInfo *)arg;
 
-
+	while (*songInfo->cont) {
 		int status = getSongInfo(songInfo->artist, songInfo->title);
 		if (status == -1)
 			return NULL;
