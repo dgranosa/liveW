@@ -1,5 +1,6 @@
 #ifndef _RENDERER_H
 #define _RENDERER_H
+#include <wchar.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -34,7 +35,7 @@ typedef struct character {
     GLuint	advance;
 } character;
 
-character characters[128];
+character characters[65536];
 
 GLuint VAO, VBO;
 

@@ -134,7 +134,7 @@ void linkBuffers(renderer *r)
 
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-	for (GLubyte c = 0; c < 128; c++)
+	for (unsigned long c = 0; c < 65536; c++)
 	{
 		if (FT_Load_Char(face, c, FT_LOAD_RENDER))
 		{
@@ -187,35 +187,41 @@ void linkBuffers(renderer *r)
 	checkErrors("Loading font");
 }
 
-void renderText(renderer *r, char *text, GLfloat x, GLfloat y, GLfloat scale, float *color) //TODO: support unicode
+void renderText(renderer *r, char *_text, GLfloat x, GLfloat y, GLfloat scale, float *color)
 {
-    printf("Rendering: %s\n", text);
+    if (strlen(_text) == 0)
+        return;
+
+    size_t len = mbstowcs(NULL, _text, 0);
+    wchar_t *text = malloc(sizeof(wchar_t) * (len + 1));
+    size_t size = mbstowcs(text, _text, len);
+
 	glUseProgram(r->progText);
     glUniform3f(glGetUniformLocation(r->progText, "textColor"), color[0], color[1], color[2]);
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(VAO);
 
-	float lenght = 0;
+	if (x == -1.0) {
+        float lenght = 0;
 
-	for (int i = 0; i < strlen(text); i++) {
-		if (text[i] < 0 || text[i] > 127)
-			continue;
+	    for (int i = 0; i < size; i++) {
+            if (text[i] < 0 || text[i] > 65536)
+                continue;
 
-		character ch = characters[(int)text[i]];
+		    character ch = characters[(int)text[i]];
+    		lenght += (ch.advance >> 6) * scale;
+    	}
 
-		lenght += (ch.advance >> 6) * scale;
-	}
-
-	if (x == -1.0)
 		x = (r->win->width - lenght) / 2.0 / r->win->width;
+    }
 
 	x *= r->win->width;
 	y *= r->win->height;
 
-    for (int i = 0; i < strlen(text); i++)
+    for (int i = 0; i < size; i++)
     {
-		if (text[i] < 0)
-			continue;
+        if (text[i] < 0 || text[i] > 65536)
+            continue;
 
         character ch = characters[(int)text[i]];
 
@@ -249,6 +255,8 @@ void renderText(renderer *r, char *text, GLfloat x, GLfloat y, GLfloat scale, fl
 	}
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);
+
+    free(text);
 }
 
 void render(renderer *r, float *sampleBuff, float *fftBuff, int buffSize)
