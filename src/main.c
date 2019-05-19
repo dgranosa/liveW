@@ -1,6 +1,7 @@
 #include <stdbool.h>
 #include <pthread.h>
 #include <string.h>
+#include <locale.h>
 
 #include "utils.h"
 #include "config.h"
@@ -11,8 +12,10 @@
 static struct pa_fft *ctx;
 
 void sig_handler(int sig_no) {
-    if (sig_no == SIGINT)
+    if (sig_no == SIGINT) {
+        printf("\rExiting\n");
         ctx->cont = 0;
+    }
 }
 
 int main(int argc, char *argv[])
@@ -27,6 +30,9 @@ int main(int argc, char *argv[])
         printHelp();
         return 0;
     }
+
+    // Set locale
+    setlocale(LC_ALL, "");
 
     // Init renderer
     renderer *rend = init_rend();

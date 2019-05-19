@@ -37,6 +37,9 @@ int exec(char *cmd, char *buf, int size)
 
 	pclose(fp);
 
+    if (buf[strlen(buf) - 1] == '\n')
+        buf[strlen(buf) - 1] = '\0';
+
 	return 0;
 }
 

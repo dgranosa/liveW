@@ -189,6 +189,7 @@ void linkBuffers(renderer *r)
 
 void renderText(renderer *r, char *text, GLfloat x, GLfloat y, GLfloat scale, float *color) //TODO: support unicode
 {
+    printf("Rendering: %s\n", text);
 	glUseProgram(r->progText);
     glUniform3f(glGetUniformLocation(r->progText, "textColor"), color[0], color[1], color[2]);
     glActiveTexture(GL_TEXTURE0);
