@@ -202,17 +202,17 @@ void renderText(renderer *r, char *_text, GLfloat x, GLfloat y, GLfloat scale, f
     glBindVertexArray(VAO);
 
 	if (x == -1.0) {
-        float lenght = 0;
+        float length = 0;
 
 	    for (int i = 0; i < size; i++) {
             if (text[i] < 0 || text[i] > 65536)
                 continue;
 
 		    character ch = characters[(int)text[i]];
-    		lenght += (ch.advance >> 6) * scale;
+    		length += (ch.advance >> 6) * scale;
     	}
 
-		x = (r->win->width - lenght) / 2.0 / r->win->width;
+		x = (r->win->width - length) / 2.0 / r->win->width;
     }
 
 	x *= r->win->width;
@@ -279,7 +279,8 @@ void render(renderer *r, float *sampleBuff, float *fftBuff, int buffSize)
 	}
 
     // Configure & link opengl
-    glDisable(GL_BLEND);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_CONSTANT_ALPHA);
 
 	glUseProgram(r->progID);
 	glBindVertexArray(vertArray);
@@ -323,11 +324,11 @@ void render(renderer *r, float *sampleBuff, float *fftBuff, int buffSize)
     GLint resolutionLoc = glGetUniformLocation(r->progID, "resolution");
     if (resolutionLoc != -1) glUniform2f(resolutionLoc, (float)r->win->width, (float)r->win->height);
 
+    GLint positionLoc = glGetUniformLocation(r->progID, "position");
+    if (positionLoc != -1) glUniform1f(positionLoc, r->songInfo.position / ((float)r->songInfo.length + 0.01));
+
     // Draw screen
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	char *time;
 	time = getSystemTime();

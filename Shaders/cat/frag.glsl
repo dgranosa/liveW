@@ -15,6 +15,7 @@ uniform vec2 resolution;
 uniform float time;
 uniform sampler1D samples;
 uniform sampler1D fft;
+uniform float position;
 uniform sampler2D albumArt;
 out vec4 color;
 
@@ -44,6 +45,14 @@ void main() {
 		}
 		return;
 	
+    }
+
+    if (uv.y < HEIGHT - 0.005 && uv.y > HEIGHT - 0.015) {
+        if (uv.x < position)
+            color = vec4(1.0, 1.0, 1.0, 1.0);
+        else
+            color = vec4(1.0, 1.0, 1.0, 0.2);
+        return;
     }
 
     

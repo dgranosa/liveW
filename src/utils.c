@@ -43,7 +43,7 @@ int exec(char *cmd, char *buf, int size)
 	return 0;
 }
 
-int getSongInfo(char *artist, char *title)
+int getSongInfo(char *artist, char *title, int *position, int *length)
 {
 	char buff[256];
 	char newArtist[128], newTitle[128];
@@ -57,6 +57,21 @@ int getSongInfo(char *artist, char *title)
 
 	if (strlen(buff))
 		strcpy(newArtist, buff);
+
+    // Get length
+    if (exec("playerctl metadata mpris:length", buff, sizeof(buff))) {
+		printf("Playerctl doesn't exist\n");
+		return -1;
+    }
+    buff[strlen(buff)-6] = '\0';
+    sscanf(buff, "%d", length);
+
+    // Get position
+    if (exec("playerctl position", buff, sizeof(buff))) {
+		printf("Playerctl doesn't exist\n");
+		return -1;
+    }
+    sscanf(buff, "%d", position);
 	
     // Get title
 	if (exec("playerctl metadata title", buff, sizeof(buff))) {
@@ -166,17 +181,17 @@ void getAlbumArt(SongInfo *songInfo) {
         return;
     }
 
-    int buffLenght = strlen(buff);
+    int buffLength = strlen(buff);
     if (cfg.debug)
-        printf("TrackID (%d): %s\n", buffLenght, buff);
+        printf("TrackID (%d): %s\n", buffLength, buff);
 
-    if (buffLenght < 17) {
+    if (buffLength < 17) {
         if (cfg.debug)
             printf("No youtube video ID\n");
         return;
     }
 
-    int start = buffLenght;
+    int start = buffLength;
 
     if (cfg.plasma) {
         while (--start && ((buff[start] != '?' && buff[start] != '&') || buff[start+1] != 'v' || buff[start+2] != '='));
@@ -185,12 +200,12 @@ void getAlbumArt(SongInfo *songInfo) {
             return;
         start += 2;
 
-        for (int i = start + 1, j = 0; i < buffLenght && j < 12; i++, j++)
+        for (int i = start + 1, j = 0; i < buffLength && j < 12; i++, j++)
             videoID[j] = buff[i];
     } else {
         while (buff[--start] != '/');
 
-        for (int i = start + 1, j = 0; i < buffLenght - 1 && j < 12; i++, j++) {
+        for (int i = start + 1, j = 0; i < buffLength - 1 && j < 12; i++, j++) {
             if (buff[i] == '_') {
                 if (buff[++i] == 'd')
                     videoID[j] = '-';
@@ -227,19 +242,20 @@ void *updateSongInfo(void *arg)
 	SongInfo *songInfo = (struct SongInfo *)arg;
 
 	while (*songInfo->cont) {
-		int status = getSongInfo(songInfo->artist, songInfo->title);
+		int status = getSongInfo(songInfo->artist, songInfo->title, &songInfo->position, &songInfo->length);
 		if (status == -1)
 			return NULL;
-		
+
 		if (cfg.debug)
 			printf("Artist: %s\nTitle: %s\n", songInfo->artist, songInfo->title);
 
 		if (status == 1)
 			getAlbumArt(songInfo);
-		else if (status == 2)
+		else if (status == 2) {
 			songInfo->newAlbumArt = true;
-
-		sleep(1);
+            songInfo->position = 0;
+            sleep(1);
+        }
 	}
 
 	return NULL;
