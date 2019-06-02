@@ -80,6 +80,8 @@ int getSongInfo(char *artist, char *title, int *position, int *length)
 	}
 
 	if (strlen(newArtist)) {
+        if (!strcmp(artist, newArtist) && !strcmp(title, buff))
+		    return 0;
 		strcpy(artist, newArtist);
 		strcpy(title, buff);
 		return 1;
