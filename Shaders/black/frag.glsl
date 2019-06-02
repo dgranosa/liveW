@@ -38,9 +38,6 @@ void main()
 
 	float f = texture(fft, b).x;
 	float t = TRANS - abs(uv.x - hlf - left);
-	
-	f *= 0.40;
-	f -= 0.10;
 
 	float top = HEIGHT + f;
 	float bottom = HEIGHT - f;

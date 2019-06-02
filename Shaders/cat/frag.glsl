@@ -6,10 +6,10 @@
 #define SIDE_SPACE      0.10
 #define HEIGHT          0.50
 
-#define IMAGE_X         0.00
-#define IMAGE_Y         0.34
-#define IMAGE_WIDTH     0.14
-#define IMAGE_HEIGHT    0.14
+#define IMAGE_X         0.10
+#define IMAGE_Y         0.33
+#define IMAGE_WIDTH     0.10
+#define IMAGE_HEIGHT    0.15
 
 uniform vec2 resolution;
 uniform float time;
@@ -23,6 +23,8 @@ void main() {
     
     vec2 uv = gl_FragCoord.xy / resolution.xy;
 
+    vec2 uuv = uv;
+
     uv.x = (uv.x - SIDE_SPACE) / (1.0 - 2.0 *SIDE_SPACE);
     
     if(uv.x < 0.0 || uv.x > 1.0)
@@ -33,14 +35,22 @@ void main() {
 
 	vec2 texSize = textureSize(albumArt, 0);
     if (texSize.x > 1
-     && IMAGE_X <= uv.x && uv.x <= IMAGE_X + IMAGE_WIDTH
-     && IMAGE_Y <= uv.y && uv.y <= IMAGE_Y + IMAGE_HEIGHT) {
+     && IMAGE_X <= uuv.x && uuv.x <= IMAGE_X + IMAGE_WIDTH
+     && IMAGE_Y <= uuv.y && uuv.y <= IMAGE_Y + IMAGE_HEIGHT) {
 
-		vec2 p = (uv - vec2(IMAGE_X, IMAGE_Y)) / vec2(IMAGE_WIDTH, IMAGE_HEIGHT);
+		vec2 p = (uuv - vec2(IMAGE_X, IMAGE_Y)) / vec2(IMAGE_WIDTH, IMAGE_HEIGHT);
+
+        float xx = 1.0;
+
+        if (texture(albumArt, vec2(0.0)).xyz == vec3(0.0)) {
+            xx = 0.75;
+        }
+
+        p.y = p.y * xx + (1.0 - xx) / 2;
 		if (texSize.x == texSize.y)
 			color = texture(albumArt, p);
 		else {
-			float r = texSize.y / texSize.x;
+			float r = texSize.y / texSize.x * xx;
 			color = texture(albumArt, vec2(p.x * r + (1.0 - r) / 2.0, p.y));
 		}
 		return;

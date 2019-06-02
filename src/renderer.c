@@ -341,8 +341,8 @@ void render(renderer *r, float *sampleBuff, float *fftBuff, int buffSize)
 	} else
 	if (cfg.shaderName && !strcmp(cfg.shaderName, "cat")) {
 		float textColor[] = {1.0, 1.0, 1.0};
-		renderText(r, r->songInfo.artist, 0.2188f, 0.4102f, 1.0f, textColor);
-		renderText(r, r->songInfo.title, 0.2188f, 0.3418f, 0.75f, textColor);
+		renderText(r, r->songInfo.artist, 0.206f, 0.4102f, 1.0f, textColor);
+		renderText(r, r->songInfo.title, 0.206f, 0.3418f, 0.75f, textColor);
 	}
 
 	checkErrors("Draw screen");
