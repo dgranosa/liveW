@@ -64,6 +64,48 @@ renderer *init_rend()
 	return r;
 }
 
+void loadCharacter(unsigned long c)
+{
+    if (FT_Load_Char(face, c, FT_LOAD_RENDER))
+    {
+        printf("ERROR::FREETYTPE: Failed to load Glyph\n");
+        return;
+    }
+
+    GLuint texture;
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glTexImage2D(
+        GL_TEXTURE_2D,
+        0,
+        GL_RED,
+        face->glyph->bitmap.width,
+        face->glyph->bitmap.rows,
+        0,
+        GL_RED,
+        GL_UNSIGNED_BYTE,
+        face->glyph->bitmap.buffer
+    );
+
+    float borderColor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
+    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);  
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    character *chr = (character *) malloc(sizeof(character));
+    chr->textureID = texture;
+    chr->sizeX = face->glyph->bitmap.width;
+    chr->sizeY = face->glyph->bitmap.rows;
+    chr->bearingX = face->glyph->bitmap_left;
+    chr->bearingY = face->glyph->bitmap_top;
+    chr->advance = face->glyph->advance.x;
+    characters[c] = chr;
+
+	checkErrors("Loading character");
+}
+
 void linkBuffers(renderer *r)
 {
 	glUseProgram(r->progID);
@@ -134,45 +176,8 @@ void linkBuffers(renderer *r)
 
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-	for (unsigned long c = 0; c < 65536; c++)
-	{
-		if (FT_Load_Char(face, c, FT_LOAD_RENDER))
-		{
-			printf("ERROR::FREETYTPE: Failed to load Glyph\n");
-			continue;
-		}
-
-
-		GLuint texture;
-		glGenTextures(1, &texture);
-		glBindTexture(GL_TEXTURE_2D, texture);
-		glTexImage2D(
-			GL_TEXTURE_2D,
-			0,
-			GL_RED,
-			face->glyph->bitmap.width,
-			face->glyph->bitmap.rows,
-			0,
-			GL_RED,
-			GL_UNSIGNED_BYTE,
-			face->glyph->bitmap.buffer
-		);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		
-		character chr = {
-			texture,
-			face->glyph->bitmap.width, face->glyph->bitmap.rows,
-			face->glyph->bitmap_left, face->glyph->bitmap_top,
-			face->glyph->advance.x
-		};
-		characters[c] = chr;
-	}
-
-	FT_Done_Face(face);
-	FT_Done_FreeType(ft);
+	for (unsigned long c = 0; c < 127; c++)
+        loadCharacter(c);
 
 	glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
@@ -208,8 +213,11 @@ void renderText(renderer *r, char *_text, GLfloat x, GLfloat y, GLfloat scale, f
             if (text[i] < 0 || text[i] > 65536)
                 continue;
 
-		    character ch = characters[(int)text[i]];
-    		length += (ch.advance >> 6) * scale;
+            if (!characters[(int)text[i]])
+                loadCharacter((unsigned long)text[i]);
+            character *ch = characters[(int)text[i]];
+
+    		length += (ch->advance >> 6) * scale;
     	}
 
 		x = (r->win->width - length) / 2.0 / r->win->width;
@@ -223,13 +231,15 @@ void renderText(renderer *r, char *_text, GLfloat x, GLfloat y, GLfloat scale, f
         if (text[i] < 0 || text[i] > 65536)
             continue;
 
-        character ch = characters[(int)text[i]];
+        if (!characters[(int)text[i]])
+            loadCharacter((unsigned long)text[i]);
+        character *ch = characters[(int)text[i]];
 
-        GLfloat xpos = x + ch.bearingX * scale;
-        GLfloat ypos = y - (ch.sizeY - ch.bearingY) * scale;
+        GLfloat xpos = x + ch->bearingX * scale;
+        GLfloat ypos = y - (ch->sizeY - ch->bearingY) * scale;
 
-        GLfloat w = ch.sizeX * scale;
-        GLfloat h = ch.sizeY * scale;
+        GLfloat w = ch->sizeX * scale;
+        GLfloat h = ch->sizeY * scale;
 
 		xpos = (xpos / r->win->width ) * 2.0 - 1.0;
 		ypos = (ypos / r->win->height) * 2.0 - 1.0;
@@ -245,13 +255,13 @@ void renderText(renderer *r, char *_text, GLfloat x, GLfloat y, GLfloat scale, f
             { xpos + w, ypos,       1.0, 1.0 },
             { xpos + w, ypos + h,   1.0, 0.0 }
         };
-        glBindTexture(GL_TEXTURE_2D, ch.textureID);
+        glBindTexture(GL_TEXTURE_2D, ch->textureID);
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
         glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
 
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glDrawArrays(GL_TRIANGLES, 0, 6);
-        x += (ch.advance >> 6) * scale;
+        x += (ch->advance >> 6) * scale;
 	}
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);

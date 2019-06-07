@@ -76,6 +76,10 @@ int main(int argc, char *argv[])
     }
 
 	usleep(1000000 / cfg.fps);
+
+	FT_Done_Face(face);
+	FT_Done_FreeType(ft);
+
     deinit_fft(ctx);
 
     return 0;

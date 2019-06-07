@@ -35,7 +35,7 @@ typedef struct character {
     GLuint	advance;
 } character;
 
-character characters[65536];
+character *characters[65536];
 
 GLuint VAO, VBO;
 
